@@ -162,7 +162,7 @@ def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id):
             gpt_response = get_answer_from_chatGPT(text)
         
         update_thread_history(thread_message_history, parent_thread_id, ['AI: %s' % insert_space(f'{gpt_response}')])
-        logger.info(f"请求成功-接下来调用接口发送消息 ---- {gpt_response}")
+        logger.info(f"请求成功-接下来调用接口发送消息")
         message_api_client.reply_text_with_message_id(thread_id, json.dumps({"text": f'{str(gpt_response)}'}), create_time)
         # 如果问题是通过语音问的，那么回话也可以使用语音，否则使用文字
         # if voicemessage is None:
