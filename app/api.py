@@ -1,10 +1,6 @@
 #! /usr/bin/env python3.8
-import os
 import logging
 import requests
-
-APP_ID = os.getenv("APP_ID")
-APP_SECRET = os.getenv("APP_SECRET")
 
 # const
 TENANT_ACCESS_TOKEN_URI = "/open-apis/auth/v3/tenant_access_token/internal"
@@ -42,6 +38,7 @@ class MessageApiClient(object):
         url = "{}/{}".format(
             self._lark_host, FILE_URI
         )
+        print(f'self.tenant_access_token--{self.tenant_access_token}')
         headers = {
             "Content-Type": "multipart/form-data; boundary=---7MA4YWxkTrZu0gW",
             "Authorization": "Bearer " + self.tenant_access_token,
@@ -67,6 +64,7 @@ class MessageApiClient(object):
         url = "{}{}/{}/reply".format(
             self._lark_host, MESSAGE_URI, message_id
         )
+        print(f'self.tenant_access_token--{self.tenant_access_token}')
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self.tenant_access_token,
@@ -78,6 +76,7 @@ class MessageApiClient(object):
             "uuid": uuid
         }
         resp = requests.post(url=url, headers=headers, json=req_body)
+        print(f'self.reply_message--{resp}')
         MessageApiClient._check_error_response(resp)
     def send(self, receive_id_type, receive_id, msg_type, content, uuid):
         # send message to user, implemented based on Feishu open api capability. doc link: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
