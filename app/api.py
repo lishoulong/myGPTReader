@@ -33,24 +33,24 @@ class MessageApiClient(object):
             resp.raise_for_status()
         return resp
 
-    def upload_file(self, file):
-        self._authorize_tenant_access_token()
-        url = "{}/{}".format(
-            self._lark_host, FILE_URI
-        )
-        print(f'self.tenant_access_token--{self.tenant_access_token}')
-        headers = {
-            "Content-Type": "multipart/form-data; boundary=---7MA4YWxkTrZu0gW",
-            "Authorization": "Bearer " + self.tenant_access_token,
-        }
-        req_body = {
-            "file_type": content,
-            "file_name": msg_type,
-            "duration": uuid,
-            "file": files
-        }
-        resp = requests.post(url=url, headers=headers, json=req_body)
-        MessageApiClient._check_error_response(resp)
+    # def upload_file(self, file):
+    #     self._authorize_tenant_access_token()
+    #     url = "{}/{}".format(
+    #         self._lark_host, FILE_URI
+    #     )
+    #     print(f'self.tenant_access_token--{self.tenant_access_token}')
+    #     headers = {
+    #         "Content-Type": "multipart/form-data; boundary=---7MA4YWxkTrZu0gW",
+    #         "Authorization": "Bearer " + self.tenant_access_token,
+    #     }
+    #     req_body = {
+    #         "file_type": content,
+    #         "file_name": msg_type,
+    #         "duration": uuid,
+    #         "file": files
+    #     }
+    #     resp = requests.post(url=url, headers=headers, json=req_body)
+    #     MessageApiClient._check_error_response(resp)
 
     def send_text_with_open_id(self, open_id, content, uuid):
         self.send("open_id", open_id, "text", content, uuid)
@@ -76,7 +76,7 @@ class MessageApiClient(object):
             "uuid": uuid
         }
         resp = requests.post(url=url, headers=headers, json=req_body)
-        print(f'self.reply_message--{resp}')
+        print(f'self.reply_message--')
         MessageApiClient._check_error_response(resp)
     def send(self, receive_id_type, receive_id, msg_type, content, uuid):
         # send message to user, implemented based on Feishu open api capability. doc link: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create

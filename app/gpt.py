@@ -5,7 +5,7 @@ import random
 import openai
 from pathlib import Path
 from langdetect import detect
-from llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader
+from llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext, PromptHelper
 from llama_index.prompts.prompts import QuestionAnswerPrompt
 from llama_index.readers.schema.base import Document
 from langchain.chat_models import ChatOpenAI
@@ -26,8 +26,17 @@ openai.api_key = chosen_api_key
 
 llm_predictor = LLMPredictor(llm=ChatOpenAI(
     temperature=0.2, model_name="gpt-3.5-turbo"))
+# define prompt helper
+# set maximum input size
+max_input_size = 4096
+# set number of output tokens
+num_output = 256
+# set maximum chunk overlap
+max_chunk_overlap = 20
+prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
 # the "mock" llm predictor is our token counter
 # mock_llm_predictor = MockLLMPredictor(max_tokens=256)÷=
+service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor, prompt_helper=prompt_helper)
 
 index_cache_web_dir = Path('/tmp/myGPTReader/cache_web/')
 index_cache_voice_dir = Path('/tmp/myGPTReader/voice/')
@@ -125,12 +134,12 @@ def get_answer_from_llama_web(messages, urls):
     if index is None:
         logging.info(f"=====> Build index from web!")
         documents = get_documents_from_urls(combained_urls)
-        index = GPTSimpleVectorIndex(documents)
+        index = GPTSimpleVectorIndex.from_documents(documents, service_context=service_context)
         logging.info(
             f"=====> Save index to disk path: {index_cache_web_dir / index_file_name}")
         
         index.save_to_disk(index_cache_web_dir / index_file_name)
-    answer = index.query(dialog_messages, llm_predictor=llm_predictor, text_qa_template=QUESTION_ANSWER_PROMPT)
+    answer = index.query(dialog_messages, text_qa_template=QUESTION_ANSWER_PROMPT)
     logging.info(
             f"=====> get_answer_from_llama_web GPTSimpleVectorIndex query tokens: {llm_predictor.last_token_usage}")
     return answer
@@ -142,20 +151,20 @@ def get_index_name_from_file(file: str):
 def get_answer_from_llama_file(messages, file):
     dialog_messages = format_dialog_messages(messages)
     logging.info(f'=====> Use llama file with chatGPT to answer! => {dialog_messages == ""}')
-    logging.info(dialog_messages)
+    # logging.info(dialog_messages)
     index_name = get_index_name_from_file(file)
     index = get_index_from_file_cache(index_name)
     if index is None:
         logging.info(f"=====> Build index from file!")
         documents = SimpleDirectoryReader(input_files=[file]).load_data()
-        index = GPTSimpleVectorIndex(documents)
+        index = GPTSimpleVectorIndex.from_documents(documents, service_context=service_context)
         logging.info(
             f"=====> Save index to disk path: {index_cache_file_dir / index_name}, get_answer_from_llama_file documents last_token_usage is {llm_predictor.last_token_usage}")
         index.save_to_disk(index_cache_file_dir / index_name)
     if dialog_messages == '':
         logging.info(f"=====> dialog_messages is empty, just build file index!")
         return "没有输入内容，已经根据文件建立索引，请在此消息后回复对于文件的问题"
-    answer = index.query(dialog_messages, llm_predictor=llm_predictor, text_qa_template=QUESTION_ANSWER_PROMPT)
+    answer = index.query(dialog_messages, text_qa_template=QUESTION_ANSWER_PROMPT)
     return answer
 
 def get_text_from_whisper(voice_file_path):

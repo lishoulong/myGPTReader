@@ -12,7 +12,7 @@ load_dotenv(find_dotenv())
 # OPENAI_API_KEY_SECOND = os.getenv('OPENAI_API_KEY_SECOND')
 # print(f'VERIFICATION_TOKENVERIFICATION_TOKEN----{VERIFICATION_TOKEN}')
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
-
+print(f'ENVIRONMENT =>> {ENVIRONMENT}')
 def get_env_value(key: str) -> str:
     return os.getenv(f"{key}_{ENVIRONMENT.upper()}")
 
