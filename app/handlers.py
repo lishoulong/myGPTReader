@@ -140,12 +140,12 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
         update_thread_history(thread_message_history, parent_thread_id, [voicemessage])
 
     # 处理 GPT 请求
-    handle_gpt_request(parent_thread_id, thread_id, create_time, voicemessage, open_id)
+    handle_gpt_request(parent_thread_id, thread_id, create_time, open_id)
 
     return jsonify()
 
 
-def handle_gpt_request(parent_thread_id, thread_id, create_time, voicemessage, open_id):
+def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id):
     urls = thread_message_history[parent_thread_id]['context_urls']
     file = thread_message_history[parent_thread_id]['file']
     text = thread_message_history[parent_thread_id]['dialog_texts']
