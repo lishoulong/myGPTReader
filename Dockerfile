@@ -9,7 +9,7 @@ RUN apt-get update && \
 	apt-get install -y ffmpeg
 
 # Copy the requirements.txt file into the container
-COPY app/requirements.txt .
+COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
