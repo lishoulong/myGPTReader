@@ -9,15 +9,11 @@ from llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReade
 from llama_index.prompts.prompts import QuestionAnswerPrompt
 from llama_index.readers.schema.base import Document
 from langchain.chat_models import ChatOpenAI
-from dotenv import load_dotenv, find_dotenv
 from utils import setup_logger
-
+from config import OPENAI_API_KEY_SECOND, OPENAI_API_KEY
 from fetch_web_post import get_urls, get_youtube_transcript, scrape_website
 from utils import get_youtube_video_id
-# load env parameters form file named .env
-load_dotenv(find_dotenv())
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-OPENAI_API_KEY_SECOND = os.getenv('OPENAI_API_KEY_SECOND')
+
 logging = setup_logger('my_gpt_reader_gpt')
 # SPEECH_KEY = os.environ.get('SPEECH_KEY')
 # SPEECH_REGION = os.environ.get('SPEECH_REGION')
