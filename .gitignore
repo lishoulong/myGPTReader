@@ -2,4 +2,5 @@
 app/.env
 app/.env_product
 app/venv
+venv
 temp/node_modules
