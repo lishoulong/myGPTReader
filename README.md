@@ -8,7 +8,7 @@ can extend the event processing functions of bot based on this example.
 ## Runtime environment
 
 - [Python 3](https://www.python.org/)
-- [ngrok](https://ngrok.com/download) (intranet penetration tool)
+- [lt](xxxxxx) (intranet penetration tool)
 
 ## Prep work
 
@@ -16,15 +16,8 @@ can extend the event processing functions of bot based on this example.
    the app details page.
 2. Go to **Credentials & Basic Info** to obtain the `App ID` and `App Secret`, and then go to **Event Subscriptions** to
    obtain the
-   `Encrypt Key` and `Verification Token`.
-3. Pull the latest code to local and enter the corresponding directory.
-
-   ```
-   git clone https://github.com/larksuite/lark-samples.git
-   cd lark-samples/robot_quick_start/python
-   ```
-
-4. Edit environment variables
+   `Encrypt Key` and `Verification Token`
+3. Edit environment variables
 
    Edit the app credential data in the `.env` file to real data.
 
@@ -36,6 +29,11 @@ can extend the event processing functions of bot based on this example.
    ```
 
    The above parameters can be viewed in [Developer Console](https://open.feishu.cn/app/). Encrypt Key can be empty.
+
+4. 安装依赖
+
+- pip3 install -r requirements.txt
+- brew install ffmpeg
 
 5. 音频转换工具
    > openai 支持的音频格式如下：['m4a', 'mp3', 'webm', 'mp4', 'mpga', 'wav', 'mpeg']。但是飞书语音的格式是 OGG 的。要将 OGG 文件转换为受支持的格式（如 MP3），您可以使用 Python 的 pydub 库。首先，您需要安装 pydub 库，以及处理音频文件所需的 ffmpeg 工具。
