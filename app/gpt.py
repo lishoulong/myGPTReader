@@ -5,9 +5,9 @@ import random
 import openai
 from pathlib import Path
 from langdetect import detect
-from llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext, PromptHelper
-from llama_index.prompts.prompts import QuestionAnswerPrompt
-from llama_index.readers.schema.base import Document
+from local_llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext, PromptHelper
+from local_llama_index.prompts.prompts import QuestionAnswerPrompt
+from local_llama_index.readers.schema.base import Document
 from langchain.chat_models import ChatOpenAI
 from utils import setup_logger
 from config import OPENAI_API_KEY_SECOND, OPENAI_API_KEY

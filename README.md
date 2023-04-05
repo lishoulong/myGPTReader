@@ -130,3 +130,4 @@ bugfix：
 - 用 docker 容器部署，希望 python 服务调用 node 服务，能够通过 rpc，这样稳定性和性能都更好，因此考虑到部署的方便性，把 node 代码和 python 代码放置到同一个仓库。
 - 支持 gpt goken 计数能力，需要升级 llama-index 到 0.5.4，但是此版本依赖 python 3.9。因为我需要 在 node 镜像上单独安装 3.9 的 python。但是安装 python 3.9 有很多前置依赖，导致在 docker 容器构建阶段失败率非常高。因此就不增加计数功能了，降级到 llama-index@0.4.26
 - 使用 fly.io 部署仓库代码,nodejs 服务切换为 python 服务
+- 4.5 大陆访问香港服务器延迟很高，甚至需要 6 分钟，因此考虑把服务部署在国内，直接访问 openai.com 会被禁止，因此考虑使用我部署在 cloudflare 上的域名 openabcd.com 来替代 openai.com。与此同时需要同步修改 llama_index 以及 openai-python 仓库来适配域名的修改。
