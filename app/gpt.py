@@ -5,11 +5,7 @@ import random
 import openai
 from pathlib import Path
 from langdetect import detect
-<<<<<<< HEAD
-from local_llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext, PromptHelper
-=======
 from local_llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext
->>>>>>> Update fly.toml image version
 from local_llama_index.prompts.prompts import QuestionAnswerPrompt
 from local_llama_index.readers.schema.base import Document
 from langchain.chat_models import ChatOpenAI
