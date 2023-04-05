@@ -4,6 +4,10 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - synchronize
+      - closed
 
 jobs:
   build_and_deploy:
