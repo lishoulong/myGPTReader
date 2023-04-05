@@ -9,6 +9,8 @@ from utils import (extract_text_and_links_from_content, insert_space, setup_logg
 from gpt import (get_answer_from_chatGPT, get_answer_from_llama_web,
                  get_answer_from_llama_file, index_cache_file_dir,
                  get_text_from_whisper)
+from rate_limiter import RateLimiter
+from ttl_set import TtlSet
 from config import APP_ID, APP_SECRET, VERIFICATION_TOKEN, LARK_HOST
 
 logger = setup_logger('my_gpt_reader_server')
@@ -16,6 +18,12 @@ logger = setup_logger('my_gpt_reader_server')
 thread_message_history = {}
 message_api_client = MessageApiClient(APP_ID, APP_SECRET, LARK_HOST)
 
+limiter_message_per_user = 50
+limiter_time_period = 3600
+limiter = RateLimiter(limit=limiter_message_per_user, period=limiter_time_period)
+
+# 创建用户 TtlSet 实例字典
+user_ttl_sets = {}
 
 def process_file_message(message, thread_id, create_time, open_id):
     filetype_extension_allowed = ['epub', 'pdf', 'text', 'docx', 'markdown']
@@ -27,7 +35,7 @@ def process_file_message(message, thread_id, create_time, open_id):
     if file_ext not in filetype_extension_allowed:
         message_api_client.reply_text_with_message_id(
             thread_id,
-            json.dumps({"text": f'<@{open_id}>, this filetype is not supported, please upload a file with extension [{", ".join(filetype_extension_allowed)}]'}),
+            json.dumps({"text": f'this filetype is not supported, please upload a file with extension [{", ".join(filetype_extension_allowed)}]'}),
             create_time
         )
         return None
@@ -35,8 +43,10 @@ def process_file_message(message, thread_id, create_time, open_id):
     temp_file_path = index_cache_file_dir / open_id
     temp_file_path.mkdir(parents=True, exist_ok=True)
     temp_file_filename = temp_file_path / file_name
-    download_and_save_file(temp_file_filename, thread_id, file_key)
-
+    result = download_and_save_file(temp_file_filename, thread_id, file_key, create_time)
+    # 如果 download_and_save_file 返回 False，表示文件大小超过限制，直接返回 None
+    if not result:
+        return None
     temp_file_md5 = md5(temp_file_filename)
     file_md5_name = index_cache_file_dir / (temp_file_md5 + '.' + file_ext)
     if not file_md5_name.exists():
@@ -70,11 +80,26 @@ def process_audio_message(message, thread_id, create_time, open_id):
     return voicemessage
 
 
-def download_and_save_file(file_path, thread_id, file_key):
+def download_and_save_file(file_path, thread_id, file_key, create_time):
+    response = message_api_client.downLoadFile(thread_id, file_key, 'file')
+    
+    # 检查文件大小是否超过 500KB
+    file_size_kb = len(response.content) / 1024
+    if file_size_kb > 500:
+        # 返回提示信息
+        message_api_client.reply_text_with_message_id(
+            thread_id,
+            json.dumps({"text": f'the file size exceeds the limit of 500KB, please upload a smaller file.'}),
+            create_time
+        )
+        return False
+
+    # 保存文件
     with open(file_path, "wb") as f:
-        response = message_api_client.downLoadFile(thread_id, file_key, 'file')
         f.write(response.content)
         logger.info(f'=====> Downloaded file to save {file_path}')
+    
+    return True
 
 
 def download_and_convert_audio(file_path, thread_id, file_key):
@@ -112,7 +137,18 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
     thread_id = message["message_id"]
     create_time = event['header']["create_time"]
     message_type = message["message_type"]
-
+    if not limiter.allow_request(open_id):
+        # 如果用户不在 TtlSet 中，向用户发送提示信息并将用户添加到 TtlSet
+        if open_id not in user_ttl_sets:
+            user_ttl_sets[open_id] = TtlSet()
+        if open_id not in user_ttl_sets[open_id]:
+            message_api_client.reply_text_with_message_id(
+                thread_id,
+                json.dumps({"text": f'<@{open_id}>, you have reached the limit of {limiter_message_per_user} messages per {limiter_time_period / 3600} hour, please try again later.'}),
+                create_time
+            )
+            user_ttl_sets[open_id].add(open_id, limiter_time_period)
+        return jsonify()
     logger.info(f'message_type-{message_type}')
     file_md5_name, voicemessage = handle_message_type(message_type, message, thread_id, create_time, open_id)
 
