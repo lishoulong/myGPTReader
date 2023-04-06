@@ -5,7 +5,7 @@ import random
 import openai
 from pathlib import Path
 from langdetect import detect
-from local_llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext
+from local_llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext, PromptHelper
 from local_llama_index.prompts.prompts import QuestionAnswerPrompt
 from local_llama_index.readers.schema.base import Document
 from langchain.chat_models import ChatOpenAI
@@ -27,16 +27,16 @@ openai.api_key = chosen_api_key
 llm_predictor = LLMPredictor(llm=ChatOpenAI(
     temperature=0.2, model_name="gpt-3.5-turbo"))
 # define prompt helper
-# # set maximum input size
-# max_input_size = 4096
-# # set number of output tokens
-# num_output = 256
-# # set maximum chunk overlap
-# max_chunk_overlap = 20
-# prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
+# set maximum input size
+max_input_size = 4096
+# set number of output tokens
+num_output = 1600
+# set maximum chunk overlap
+max_chunk_overlap = 50
+prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
 # the "mock" llm predictor is our token counter
 # mock_llm_predictor = MockLLMPredictor(max_tokens=256)÷=
-service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor)
+service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor, prompt_helper=prompt_helper)
 
 index_cache_web_dir = Path('/tmp/myGPTReader/cache_web/')
 index_cache_voice_dir = Path('/tmp/myGPTReader/voice/')
