@@ -1,0 +1,65 @@
+{
+    "producthunt": {
+        "name": "Product Hunt",
+        "rss": {
+            "hot": {
+                "name": "Product Hunt Hot",
+                "url": "https://rsshub.app/producthunt/today"
+            }
+        }
+    },
+    "trendings": {
+        "name": "trendings",
+        "rss": {
+            "hot": {
+                "name": "github trendings",
+                "url": "https://rsshub.app/github/trending/daily/typescript"
+            }
+        }
+    },
+    "zaozaoliao": {
+        "name": "zaozaoliao",
+        "rss": {
+            "hot": {
+                "name": "前端早早聊",
+                "url": "https://rsshub.app/zaozao/article/quality"
+            }
+        }
+    },
+    "segmentfault": {
+        "name": "segmentfault",
+        "rss": {
+            "hot": {
+                "name": "segmentfault",
+                "url": "https://rsshub.app/segmentfault/channel/frontend"
+            }
+        }
+    },
+    "hackmd": {
+        "name": "hackmd",
+        "rss": {
+            "hot": {
+                "name": "hackmd",
+                "url": "https://rsshub.app/hackmd/profile/hackmd"
+            }
+        }
+    },
+    "bbcnewslabs": {
+        "name": "bbcnewslabs",
+        "rss": {
+            "hot": {
+                "name": "bbcnewslabs",
+                "url": "https://rsshub.app/bbcnewslabs/news"
+            }
+        }
+    },
+    "dbaplus": {
+        "name": "dbaplus",
+        "rss": {
+            "hot": {
+                "name": "dbaplus",
+                "url": "https://rsshub.app/dbaplus"
+            }
+        }
+    }
+}

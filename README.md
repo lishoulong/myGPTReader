@@ -102,10 +102,15 @@ sh exec.sh
    pip install -r requirements.txt
    ```
 
+3. run docker
+
+- docker build -t gpt-reader-bot .
+- docker run -d --name gpt-container -p 8080:5000 gpt-reader-bot
+
 3. Run
 
    ```
-   python3 server.py
+   python3 app/server.py
    ```
 
 # Feature & bugfix

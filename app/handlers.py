@@ -12,6 +12,7 @@ from gpt import (get_answer_from_chatGPT, get_answer_from_llama_web,
 from rate_limiter import RateLimiter
 from ttl_set import TtlSet
 from config import APP_ID, APP_SECRET, VERIFICATION_TOKEN, LARK_HOST
+from daily_hot_news import build_all_news_block
 
 logger = setup_logger('my_gpt_reader_server')
 
@@ -217,8 +218,21 @@ def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id):
 
     return
 
+# 授权 url 的验证
 def request_url_verify_handler(req_data: UrlVerificationEvent):
     # url verification, just need return challenge
     if req_data.event.token != VERIFICATION_TOKEN:
         raise Exception("VERIFICATION_TOKEN is invalid")
     return jsonify({"challenge": req_data.event.challenge})
+
+# 推送消息
+def schedule_news():
+    logger.info("=====> Start to send daily news!")
+    all_news_blocks = build_all_news_block()
+    for news_item in all_news_blocks:
+        try:
+            # 发起网络请求
+            result = message_api_client.webhookRequest(news_item)
+            logger.info(f"schedule_news ->>>>>>>>>>>>>>>>>{result}")
+        except Exception as e:
+            logger.error(f"schedule_news error -> {e}")
