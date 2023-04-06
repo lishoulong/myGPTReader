@@ -105,7 +105,7 @@ sh exec.sh
 3. Run
 
    ```
-   python3 server.py
+   python3 app/server.py
    ```
 
 # Feature & bugfix
