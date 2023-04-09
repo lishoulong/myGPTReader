@@ -55,7 +55,7 @@ def scrape_website(url: str) -> str:
     result = _parse_url_or_html(url);
     try:
         text_content = html2text.html2text(result)
-        print(f'result 成功=>{text_content}')
+        print(f'result url 成功=>{url}')
         return text_content
     except Exception as e:
         logging.warning(f"html2text.html2text error: {e}")
