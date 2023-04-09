@@ -28,11 +28,24 @@ class MessageApiClient(object):
             "Authorization": "Bearer " + self.tenant_access_token,
         }
         resp = requests.get(url=url, headers=headers)
-        print(f'downLoadFile--------{resp}')
         if resp.status_code != 200:
             resp.raise_for_status()
         return resp
-
+    
+    def webhookRequest(self, content):
+        url = "https://open.feishu.cn/open-apis/bot/v2/hook/35581f8a-d488-47c8-b160-d484970e2ccf"
+        req_body = {
+            "msg_type": "post",
+            "content": {
+                "post": {
+                    "zh_cn": content
+                }
+            }
+        }
+        resp = requests.post(url=url, json=req_body)
+        print(f'self.reply_message-- {resp}')
+        MessageApiClient._check_error_response(resp)
+        return resp
     # def upload_file(self, file):
     #     self._authorize_tenant_access_token()
     #     url = "{}/{}".format(
