@@ -1,4 +1,4 @@
-from paddleocr import PaddleOCR
+# from paddleocr import PaddleOCR
 import numpy as np
 from io import BytesIO
 from PIL import Image
