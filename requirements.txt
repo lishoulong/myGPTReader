@@ -21,3 +21,6 @@ lxml==4.9.2
 pycryptodome==3.17
 wheel==0.40.0
 flask-apscheduler==1.12.4
+paddleocr==2.0.1
+paddlepaddle
+salesforce-lavis==1.0.2

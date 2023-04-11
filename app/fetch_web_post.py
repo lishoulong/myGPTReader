@@ -8,14 +8,10 @@ import validators
 import fnmatch
 from youtube_transcript_api import YouTubeTranscriptApi
 from scrapers import _parse_url_or_html
-import grpc
-import service_pb2_grpc
 
 PHANTOMJSCLOUD_API_KEY = os.environ.get('PHANTOMJSCLOUD_API_KEY')
 PHANTOMJSCLOUD_WEBSITES = ['https://twitter.com/', 'https://t.co/', 'https://medium.com/', 'https://app.mailbrew.com/', 'https://us12.campaign-archive.com', 'https://news.ycombinator.com', 'https://www.bloomberg.com', 'https://*.substack.com/*', 'https://*.1point3acres.com/*', 'https://www.v2ex.com', 'https://www.producthunt.com', 'http://xueqiu.com', 'https://www.jisilu.cn', 'https://www.163.com']
 
-channel = grpc.insecure_channel("localhost:50051")
-stub = service_pb2_grpc.MyServiceStub(channel)
 
 def check_if_need_use_phantomjscloud(url):
     for site in PHANTOMJSCLOUD_WEBSITES:

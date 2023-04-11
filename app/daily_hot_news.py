@@ -19,7 +19,7 @@ with open(data_file_path, "r") as f:
 TODAY = today = date.today()
 MAX_DESCRIPTION_LENGTH = 300
 MAX_POSTS = 5
-gpt_keys = ['trendings']
+gpt_keys = []
 
 def cut_string(text):
     words = text.split()
@@ -100,10 +100,6 @@ def build_slack_blocks(title, news):
                 "tag": "a",
                 "href": news_item['url'],
                 "text": f"\n原文链接：<{news_item['url']}>"
-            },
-            {
-                "tag": "text",
-                "text": f"\n更新时间：{news_item['publish_date']}",
             }
         ]
         blocks.append(news_block)
