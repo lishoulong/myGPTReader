@@ -83,7 +83,7 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GPT_BOT_AUTO_TASK }}
-          branch: feat/noservicecontext
+          branch: feat/ocr
 
   deploy:
     needs: build_and_deploy
