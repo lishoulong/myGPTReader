@@ -1,11 +1,12 @@
 #!/usr/bin/env python3.8
 import requests
+import datetime
 from event import EventManager
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_apscheduler import APScheduler
 from utils import setup_logger
 from config import VERIFICATION_TOKEN, ENCRYPT_KEY
-from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news
+from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image
 
 logger = setup_logger('my_gpt_reader_server')
 
@@ -15,10 +16,10 @@ scheduler = APScheduler()
 scheduler.api_enabled = True
 scheduler.init_app(app)
 
-# # 获取当前时间
+# 获取当前时间
 # now = datetime.datetime.now()
 
-# # 任务1：5天后执行
+# 任务1：5天后执行
 # run_date_task1 = now + datetime.timedelta(seconds=5)
 
 # @scheduler.task('date', id='date_task1', run_date=run_date_task1)
@@ -54,6 +55,41 @@ def callback_event_handler():
         return jsonify()
     return event_handler(event)
 
+@app.route("/api-image-meme", methods=["POST"])
+def image_meme_handler():
+    if 'file' not in request.files:
+        return 'No file part', 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 400
+
+    buffer = file.read()
+    logger.info(f'=====> apiapiapi')
+    
+    try:
+        answer = meme_image(buffer)
+        return jsonify({'result': answer})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/api-image-ocr", methods=["POST"])
+def image_ocr_handler():
+    if 'file' not in request.files:
+        return 'No file part', 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 400
+
+    buffer = file.read()
+    logger.info(f'=====> apiapiapi')
+    
+    try:
+        answer = refine_image(buffer)
+        return jsonify({'result': answer})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
     # init()

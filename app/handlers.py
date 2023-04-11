@@ -13,6 +13,7 @@ from rate_limiter import RateLimiter
 from ttl_set import TtlSet
 from config import APP_ID, APP_SECRET, VERIFICATION_TOKEN, LARK_HOST
 from daily_hot_news import build_all_news_block
+from ocr import image_ocr, image_meme
 
 logger = setup_logger('my_gpt_reader_server')
 
@@ -236,3 +237,25 @@ def schedule_news():
             logger.info(f"schedule_news ->>>>>>>>>>>>>>>>>{result}")
         except Exception as e:
             logger.error(f"schedule_news error -> {e}")
+
+def refine_image(buffer):
+    try:
+        # 把 buffer 转化为文案
+        str_list = image_ocr(buffer)
+        news_summary_prompt = '请用中文简短概括这篇文章的内容。'
+        str_list.append(news_summary_prompt)
+        answer = get_answer_from_chatGPT(str_list)
+        return answer
+    except Exception as e:
+        error = f"refine_image error -> {e}"
+        logger.error(error)
+        return error
+    
+def meme_image(buffer):
+    try:
+        answer = image_meme(buffer)
+        return answer
+    except Exception as e:
+        error = f"refine_image error -> {e}"
+        logger.error(error)
+        return error
