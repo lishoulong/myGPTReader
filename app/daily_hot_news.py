@@ -100,10 +100,6 @@ def build_slack_blocks(title, news):
                 "tag": "a",
                 "href": news_item['url'],
                 "text": f"\n原文链接：<{news_item['url']}>"
-            },
-            {
-                "tag": "text",
-                "text": f"\n更新时间：{news_item['publish_date']}",
             }
         ]
         blocks.append(news_block)
