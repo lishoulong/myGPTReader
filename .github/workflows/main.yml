@@ -72,7 +72,9 @@ jobs:
       - name: Update fly.toml image version
         if: ${{ env.only_main_yml_changed == 'false' }}
         run: |
+          cat fly.toml
           sed -i "s|image = \"lishoulong/gpt-reader-bot:.*\"|image = \"lishoulong/gpt-reader-bot:${{ env.NEW_VERSION }}\"|g" fly.toml
+          cat fly.toml
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
           git add fly.toml
