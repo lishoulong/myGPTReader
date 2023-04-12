@@ -1,4 +1,5 @@
 import json
+import os
 from api import MessageApiClient
 from event import MessageReceiveEvent, UrlVerificationEvent
 from flask import jsonify
@@ -13,7 +14,7 @@ from rate_limiter import RateLimiter
 from ttl_set import TtlSet
 from config import APP_ID, APP_SECRET, VERIFICATION_TOKEN, LARK_HOST
 from daily_hot_news import build_all_news_block
-from ocr import image_ocr, image_meme
+from speak import get_video
 
 logger = setup_logger('my_gpt_reader_server')
 
@@ -103,7 +104,6 @@ def download_and_save_file(file_path, thread_id, file_key, create_time):
     
     return True
 
-
 def download_and_convert_audio(file_path, thread_id, file_key):
     with open(file_path, "wb") as f:
         response = message_api_client.downLoadFile(thread_id, file_key, 'file')
@@ -178,12 +178,12 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
         update_thread_history(thread_message_history, parent_thread_id, [voicemessage])
 
     # 处理 GPT 请求
-    handle_gpt_request(parent_thread_id, thread_id, create_time, open_id)
+    handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicemessage)
 
     return jsonify()
 
 
-def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id):
+def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicemessage):
     urls = thread_message_history[parent_thread_id]['context_urls']
     file = thread_message_history[parent_thread_id]['file']
     text = thread_message_history[parent_thread_id]['dialog_texts']
@@ -201,17 +201,25 @@ def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id):
         
         update_thread_history(thread_message_history, parent_thread_id, ['AI: %s' % insert_space(f'{gpt_response}')])
         logger.info(f"请求成功-接下来调用接口发送消息")
-        message_api_client.reply_text_with_message_id(thread_id, json.dumps({"text": f'{str(gpt_response)}'}), create_time)
+        # message_api_client.reply_text_with_message_id(thread_id, json.dumps({"text": f'{str(gpt_response)}'}), create_time)
         # 如果问题是通过语音问的，那么回话也可以使用语音，否则使用文字
-        # if voicemessage is None:
-        #     message_api_client.reply_text_with_message_id(thread_id, json.dumps({"text": f'{str(gpt_response)}'}), create_time)
-        # else:
-        #     # voice_file_path = get_voice_file_from_text(str(gpt_response))
-        #     logger.info(f'=====> Voice file path is')
+        if voicemessage is None:
+            message_api_client.reply_text_with_message_id(thread_id, json.dumps({"text": f'{str(gpt_response)}'}), create_time)
+        else:
+            voice_file_path, duration = get_video(str(gpt_response))
+            file_name = os.path.basename(voice_file_path)
+            logger.info(f'=====> Voice file path is {voice_file_path}')
+            # Read the file content as binary data
+            with open(voice_file_path, 'rb') as file:
+                file_content = file.read()
             # 把音频文件上传得到 file_key
-            # file_key = message_api_client.upload_file(file=voice_file_path, duration, file_name, file_type)
+            resp = message_api_client.upload_file(files=file_content, file_name=file_name)
+            response_dict = resp.json()
+            data = response_dict.get("data", {})
+            file_key = data.get("file_key", "")
+            print(f"file_keyfile_key => {file_key}")
             # 回复消息内容体为 file_key
-            # message_api_client.reply_text_with_message_id(thread_id, json.dumps({"file_key": file_key}), create_time)
+            message_api_client.reply_text_with_message_id(thread_id, json.dumps({"file_key": file_key}), create_time, message_type="audio")
     except Exception as e:
         err_msg = f'Task failed with error: {e}'
         print(err_msg)
@@ -241,11 +249,12 @@ def schedule_news():
 def refine_image(buffer):
     try:
         # 把 buffer 转化为文案
-        str_list = image_ocr(buffer)
-        news_summary_prompt = '请用中文简短概括这篇文章的内容。'
-        str_list.append(news_summary_prompt)
-        answer = get_answer_from_chatGPT(str_list)
-        return answer
+        # str_list = image_ocr(buffer)
+        # news_summary_prompt = '请用中文简短概括这篇文章的内容。'
+        # str_list.append(news_summary_prompt)
+        # answer = get_answer_from_chatGPT(str_list)
+        # return answer
+        print(f"refine_image")
     except Exception as e:
         error = f"refine_image error -> {e}"
         logger.error(error)
@@ -253,8 +262,9 @@ def refine_image(buffer):
     
 def meme_image(buffer):
     try:
-        answer = image_meme(buffer)
-        return answer
+        # answer = image_meme(buffer)
+        # return answer
+        print(f"meme_image")
     except Exception as e:
         error = f"refine_image error -> {e}"
         logger.error(error)
