@@ -108,7 +108,7 @@ def get_index_from_web_cache(name):
     web_cache_file = index_cache_web_dir / name
     if not web_cache_file.is_file():
         return None
-    index = GPTSimpleVectorIndex.load_from_disk(web_cache_file)
+    index = GPTSimpleVectorIndex.load_from_disk(web_cache_file, service_context=service_context)
     logging.info(
         f"=====> Get index from web cache: {web_cache_file}")
     return index
@@ -118,7 +118,7 @@ def get_index_from_file_cache(name):
     file_cache_file = index_cache_file_dir / name
     if not file_cache_file.is_file():
         return None
-    index = GPTSimpleVectorIndex.load_from_disk(file_cache_file)
+    index = GPTSimpleVectorIndex.load_from_disk(file_cache_file, service_context=service_context)
     logging.info(
         f"=====> Get index from file cache: {file_cache_file}")
     return index
