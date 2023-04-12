@@ -5,3 +5,4 @@ app/venv
 venv
 temp/node_modules
 .DS_Store
+speak.py
