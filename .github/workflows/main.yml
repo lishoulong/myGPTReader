@@ -18,14 +18,6 @@ jobs:
           fetch-depth: 2
           token: ${{ secrets.GPT_BOT_AUTO_TASK }}
 
-      - name: Set up Docker
-        run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh get-docker.sh
-          sudo systemctl start docker
-          sudo systemctl enable docker
-          sudo docker --version
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -69,21 +61,18 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
-      - name: Build Docker image
+      - name: Build and push Docker image
         if: ${{ env.only_main_yml_changed == 'false' }}
         uses: docker/build-push-action@v2
         with:
           context: .
+          push: true
           tags: lishoulong/gpt-reader-bot:${{ env.NEW_VERSION }}
-          push: false
-          load: true
 
       - name: Update fly.toml image version
         if: ${{ env.only_main_yml_changed == 'false' }}
         run: |
-          cat fly.toml
           sed -i "s|image = \"lishoulong/gpt-reader-bot:.*\"|image = \"lishoulong/gpt-reader-bot:${{ env.NEW_VERSION }}\"|g" fly.toml
-          cat fly.toml
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
           git add fly.toml
@@ -96,12 +85,13 @@ jobs:
           github_token: ${{ secrets.GPT_BOT_AUTO_TASK }}
           branch: feat/ocr
 
-      - name: Set up Flyctl
-        if: ${{ env.only_main_yml_changed == 'false' }}
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Deploy app
-        if: ${{ env.only_main_yml_changed == 'false' }}
-        run: flyctl deploy --local-only
+  deploy:
+    needs: build_and_deploy
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
