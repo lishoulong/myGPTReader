@@ -76,6 +76,7 @@ jobs:
           context: .
           tags: lishoulong/gpt-reader-bot:${{ env.NEW_VERSION }}
           push: false
+          load: true
 
       - name: Update fly.toml image version
         if: ${{ env.only_main_yml_changed == 'false' }}
