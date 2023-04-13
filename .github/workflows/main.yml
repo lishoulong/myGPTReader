@@ -18,6 +18,14 @@ jobs:
           fetch-depth: 2
           token: ${{ secrets.GPT_BOT_AUTO_TASK }}
 
+      - name: Set up Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo docker --version
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
