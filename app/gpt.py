@@ -9,7 +9,7 @@ from local_llama_index.prompts.prompts import QuestionAnswerPrompt
 from local_llama_index.readers.schema.base import Document
 from langchain.chat_models import ChatOpenAI
 from utils import setup_logger
-from config import OPENAI_API_KEY_SECOND, OPENAI_API_KEY
+from config import OPENAI_API_KEY_SECOND, OPENAI_API_KEY, OPENAI_API_KEY_THIRD
 from fetch_web_post import get_urls, get_youtube_transcript, scrape_website
 from utils import get_youtube_video_id
 
@@ -17,7 +17,7 @@ logging = setup_logger('my_gpt_reader_gpt')
 # SPEECH_KEY = os.environ.get('SPEECH_KEY')
 # SPEECH_REGION = os.environ.get('SPEECH_REGION')
 # 将 API 密钥放入列表中
-api_keys = [OPENAI_API_KEY, OPENAI_API_KEY_SECOND]
+api_keys = [OPENAI_API_KEY, OPENAI_API_KEY_SECOND, OPENAI_API_KEY_THIRD]
 # 随机选择一个 API 密钥
 chosen_api_key = random.choice(api_keys)
 # 将选定的 API 密钥分配给 openai.api_key
