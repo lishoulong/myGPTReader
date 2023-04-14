@@ -22,3 +22,6 @@ pycryptodome==3.17
 wheel==0.40.0
 flask-apscheduler==1.12.4
 salesforce-lavis==1.0.2
+gtts==2.3.1
+opuslib==3.0.1
+requests_toolbelt
