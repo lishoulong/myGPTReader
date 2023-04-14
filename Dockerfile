@@ -7,15 +7,15 @@ WORKDIR /app
 # Update the package list and install FFmpeg，and install required build tools
 RUN apt-get update && \
 	apt-get install -y ffmpeg \
-	build-essential \
-	gcc \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& apt-get clean
 
 # Copy the requirements.txt file into the container
 COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt \
+	&& rm -rf ~/.cache/pip
 
 # Copy the rest of the application code into the container
 COPY app/ .
