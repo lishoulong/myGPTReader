@@ -4,11 +4,11 @@ FROM python:3.9-slim
 # Set the working directory
 WORKDIR /app
 
-# Update the package list and install FFmpeg，and install required build tools
+# Update the package list and install FFmpeg, build-essential, and clean up apt cache
 RUN apt-get update && \
-	apt-get install -y ffmpeg \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& apt-get clean
+	apt-get install -y ffmpeg build-essential && \
+	rm -rf /var/lib/apt/lists/* && \
+	apt-get clean
 
 # Copy the requirements.txt file into the container
 COPY requirements.txt .
