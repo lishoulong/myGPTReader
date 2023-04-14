@@ -1,6 +1,7 @@
 #! /usr/bin/env python3.8
 import logging
 import requests
+from requests_toolbelt import MultipartEncoder
 
 # const
 TENANT_ACCESS_TOKEN_URI = "/open-apis/auth/v3/tenant_access_token/internal"
@@ -46,30 +47,35 @@ class MessageApiClient(object):
         print(f'self.reply_message-- {resp}')
         MessageApiClient._check_error_response(resp)
         return resp
-    # def upload_file(self, file):
-    #     self._authorize_tenant_access_token()
-    #     url = "{}/{}".format(
-    #         self._lark_host, FILE_URI
-    #     )
-    #     print(f'self.tenant_access_token--{self.tenant_access_token}')
-    #     headers = {
-    #         "Content-Type": "multipart/form-data; boundary=---7MA4YWxkTrZu0gW",
-    #         "Authorization": "Bearer " + self.tenant_access_token,
-    #     }
-    #     req_body = {
-    #         "file_type": content,
-    #         "file_name": msg_type,
-    #         "duration": uuid,
-    #         "file": files
-    #     }
-    #     resp = requests.post(url=url, headers=headers, json=req_body)
-    #     MessageApiClient._check_error_response(resp)
+
+    def upload_file(self, files, file_name):
+        self._authorize_tenant_access_token()
+        url = "{}{}".format(
+            self._lark_host, FILE_URI
+        )
+        print(f'self.tenant_access_token--{self.tenant_access_token}')
+        headers = {
+            "Authorization": "Bearer " + self.tenant_access_token,
+        }
+
+        form = {
+            "file_type": "opus",
+            "file_name": file_name,
+            "file": (file_name, files, 'audio/opus')
+        }
+
+        multi_form = MultipartEncoder(form)
+        headers['Content-Type'] = multi_form.content_type
+
+        resp = requests.post(url=url, headers=headers, data=multi_form)
+        MessageApiClient._check_error_response(resp)
+        return resp
 
     def send_text_with_open_id(self, open_id, content, uuid):
         self.send("open_id", open_id, "text", content, uuid)
 
-    def reply_text_with_message_id(self, message_id, content, uuid):
-        self.reply_message(message_id, "text", content, uuid)
+    def reply_text_with_message_id(self, message_id, content, uuid, message_type="text"):
+        self.reply_message(message_id, message_type, content, uuid)
 
     def reply_message(self, message_id, msg_type, content, uuid):
         # send message to user, implemented based on Feishu open api capability. doc link: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
@@ -91,6 +97,7 @@ class MessageApiClient(object):
         resp = requests.post(url=url, headers=headers, json=req_body)
         print(f'self.reply_message--')
         MessageApiClient._check_error_response(resp)
+
     def send(self, receive_id_type, receive_id, msg_type, content, uuid):
         # send message to user, implemented based on Feishu open api capability. doc link: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
         self._authorize_tenant_access_token()
@@ -122,8 +129,13 @@ class MessageApiClient(object):
     @staticmethod
     def _check_error_response(resp):
         # check if the response contains error information
-        if resp.status_code != 200:
+        try:
             resp.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP Error: {e}")
+            print(f"Response content: {resp.content}")
+            raise
+
         response_dict = resp.json()
         code = response_dict.get("code", -1)
         if code != 0:
