@@ -151,6 +151,29 @@ def convert_ogg_to_mp3_binary(ogg_binary_data, audio_format):
     # Return the binary MP3 data
     return mp3_buffer.getvalue()
 
+def convert_mp3_to_opus_binary(mp3_binary_data, audio_format="MP3"):
+    # If the audio format is already opus, return the original data
+    if audio_format.lower() == 'opus':
+        return mp3_binary_data
+
+    # Create a BytesIO object from the binary data
+    mp3_buffer = io.BytesIO(mp3_binary_data)
+
+    # Read MP3 data from the BytesIO object
+    mp3_audio = AudioSegment.from_mp3(mp3_buffer)
+
+    # Get the duration of the audio in seconds
+    duration_seconds = mp3_audio.duration_seconds
+
+    # Create a BytesIO object for the Opus data
+    opus_buffer = io.BytesIO()
+
+    # Export the audio as Opus to the BytesIO object
+    mp3_audio.export(opus_buffer, format="opus")
+
+    # Return the binary Opus data and the duration in seconds
+    return opus_buffer.getvalue(), duration_seconds
+
 def is_authorized(user_id: str) -> bool:
     with open(whitelist_file, "r") as f:
         return user_id in f.read().splitlines()
