@@ -4,7 +4,6 @@ import hashlib
 import random
 import openai
 from pathlib import Path
-from langdetect import detect
 from local_llama_index import GPTSimpleVectorIndex, LLMPredictor, SimpleDirectoryReader, ServiceContext, PromptHelper
 from local_llama_index.prompts.prompts import QuestionAnswerPrompt
 from local_llama_index.readers.schema.base import Document
@@ -39,15 +38,11 @@ prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
 service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor, prompt_helper=prompt_helper)
 
 index_cache_web_dir = Path('/tmp/myGPTReader/cache_web/')
-index_cache_voice_dir = Path('/tmp/myGPTReader/voice/')
 home_dir = os.path.expanduser("~")
 index_cache_file_dir = Path(home_dir, "myGPTReader", "file")
 
 if not index_cache_web_dir.is_dir():
     index_cache_web_dir.mkdir(parents=True, exist_ok=True)
-
-if not index_cache_voice_dir.is_dir():
-    index_cache_voice_dir.mkdir(parents=True, exist_ok=True)
 
 if not index_cache_file_dir.is_dir():
     index_cache_file_dir.mkdir(parents=True, exist_ok=True)
@@ -174,27 +169,3 @@ def get_text_from_whisper(voice_file_path):
 
 def remove_prompt_from_text(text):
     return text.replace('AI:', '').strip()
-
-lang_code_voice_map = {
-    'zh': ['zh-CN-XiaoxiaoNeural', 'zh-CN-XiaohanNeural', 'zh-CN-YunxiNeural', 'zh-CN-YunyangNeural'],
-    'en': ['en-US-JennyNeural', 'en-US-RogerNeural', 'en-IN-NeerjaNeural', 'en-IN-PrabhatNeural', 'en-AU-AnnetteNeural', 'en-AU-CarlyNeural', 'en-GB-AbbiNeural', 'en-GB-AlfieNeural'],
-    'ja': ['ja-JP-AoiNeural', 'ja-JP-DaichiNeural'],
-    'de': ['de-DE-AmalaNeural', 'de-DE-BerndNeural'],
-}
-
-def convert_to_ssml(text, voice_name=None):
-    try:
-        logging.info("=====> Convert text to ssml!")
-        logging.info(text)
-        text = remove_prompt_from_text(text)
-        lang_code = detect(text)
-        if voice_name is None:
-            voice_name = random.choice(lang_code_voice_map[lang_code.split('-')[0]])
-    except Exception as e:
-        logging.warning(f"Error: {e}. Using default voice.")
-        voice_name = random.choice(lang_code_voice_map['zh'])
-    ssml = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-CN">'
-    ssml += f'<voice name="{voice_name}">{text}</voice>'
-    ssml += '</speak>'
-
-    return ssml
