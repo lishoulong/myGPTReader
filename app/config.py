@@ -18,8 +18,11 @@ def get_env_value(key: str) -> str:
 
 APP_ID = get_env_value("APP_ID")
 APP_SECRET = get_env_value("APP_SECRET")
+print(f'APP_SECRET =>> {APP_SECRET}')
 VERIFICATION_TOKEN = get_env_value("VERIFICATION_TOKEN")
 ENCRYPT_KEY = get_env_value("ENCRYPT_KEY")
 LARK_HOST = os.getenv("LARK_HOST")
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 OPENAI_API_KEY_SECOND = os.getenv('OPENAI_API_KEY_SECOND')
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+USE_MAC_OS_TTS = os.getenv('USE_MAC_OS_TTS')
