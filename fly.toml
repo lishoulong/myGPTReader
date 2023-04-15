@@ -1,12 +1,12 @@
 # fly.toml file generated for gpt-reader-bot on 2023-04-01T17:34:18+08:00
 
-app = "feishu-gpt-bot"
+app = "gpt-reader-bot"
 kill_signal = "SIGINT"
 kill_timeout = 5
 primary_region = "hkg"
 
 [build]
-  image = "lishoulong/gpt-reader-bot:v1.0.289"
+  image = "lishoulong/gpt-reader-bot:v1.0.290"
   dockerfile = "Dockerfile"
 
 [build.settings]
