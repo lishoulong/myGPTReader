@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.8
 import requests
-import datetime
 from event import EventManager
 from flask import Flask, jsonify, request
 from flask_apscheduler import APScheduler
@@ -30,7 +29,7 @@ def register_task(scheduler, task_id, trigger_type, func, **trigger_args):
     scheduler.add_job(id=task_id, func=func, trigger=trigger_type, **trigger_args)
 
 # 注册 schedule_news 任务
-register_task(scheduler, 'daily_news_task', 'cron', schedule_news, hour=1, minute=30)
+register_task(scheduler, 'daily_news_task', 'cron', schedule_news, hour=0, minute=20)
 
 event_manager = EventManager()
 event_manager.register("url_verification")(request_url_verify_handler)
