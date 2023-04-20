@@ -4,13 +4,14 @@ from event import EventManager
 from flask import Flask, jsonify, request
 from flask_apscheduler import APScheduler
 from utils import setup_logger
+from pytz import utc
 from config import VERIFICATION_TOKEN, ENCRYPT_KEY
 from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image
 
 logger = setup_logger('my_gpt_reader_server')
 
 app = Flask(__name__)
-
+app.config['SCHEDULER_TIMEZONE'] = utc
 scheduler = APScheduler()
 scheduler.api_enabled = True
 scheduler.init_app(app)
@@ -29,7 +30,7 @@ def register_task(scheduler, task_id, trigger_type, func, **trigger_args):
     scheduler.add_job(id=task_id, func=func, trigger=trigger_type, **trigger_args)
 
 # 注册 schedule_news 任务
-register_task(scheduler, 'daily_news_task', 'cron', schedule_news, hour=0, minute=20)
+register_task(scheduler, 'daily_news_task', 'cron', schedule_news, hour=1, minute=30)
 
 event_manager = EventManager()
 event_manager.register("url_verification")(request_url_verify_handler)
