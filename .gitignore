@@ -1,6 +1,7 @@
 # Environments
 app/.env
 app/.env_product
+app/.env_prod
 app/venv
 venv
 temp/node_modules

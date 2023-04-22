@@ -30,6 +30,10 @@ app.post("/web-crawler", (req, res) => {
   processRequest(req, res);
 });
 
+app.get('/test-get', (req, res) => {
+  res.send("GET Request Called")
+})
+
 const port = 4000;
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
