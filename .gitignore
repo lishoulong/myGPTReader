@@ -1,7 +1,11 @@
 # Environments
 app/.env
+app/__pycache__
+app/utils/__pycache__
 app/.env_product
+app/.env_prod
 app/venv
+embeddings/cache
 venv
 temp/node_modules
 .DS_Store

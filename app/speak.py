@@ -3,7 +3,7 @@ import uuid
 import requests
 from pathlib import Path
 from pydub import AudioSegment
-from utils import convert_mp3_to_opus_binary
+from utils.audio import convert_mp3_to_opus_binary
 from config import ELEVENLABS_API_KEY, USE_MAC_OS_TTS
 import gtts
 from threading import Lock, Semaphore
@@ -21,6 +21,7 @@ tts_headers = {
 mutex_lock = Lock()
 queue_semaphore = Semaphore(1)
 
+
 def gtts_speech(text):
     tts = gtts.gTTS(text)
     file_path = f"{index_cache_voice_dir}{uuid.uuid4()}.mp3"
@@ -29,6 +30,7 @@ def gtts_speech(text):
     duration = audio.duration_seconds
     return file_path, duration
 
+
 def macos_tts_speech(text):
     file_path = f"{index_cache_voice_dir}{uuid.uuid4()}.aiff"
     os.system(f'say "{text}" -o {file_path} --file-format=aiff')
@@ -36,10 +38,13 @@ def macos_tts_speech(text):
     duration = audio.duration_seconds
     return file_path, duration
 
+
 def eleven_labs_speech(text, voice_index=0):
-    tts_url = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}".format(voice_id=voices[voice_index])
+    tts_url = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}".format(
+        voice_id=voices[voice_index])
     formatted_message = {"text": text}
-    response = requests.post(tts_url, headers=tts_headers, json=formatted_message)
+    response = requests.post(
+        tts_url, headers=tts_headers, json=formatted_message)
 
     if response.status_code == 200:
         opus_content, duration = convert_mp3_to_opus_binary(response.content)
@@ -51,6 +56,7 @@ def eleven_labs_speech(text, voice_index=0):
         print("Request failed with status code:", response.status_code)
         print("Response content:", response.content)
         return False, None, 0
+
 
 def get_video(text, voice_index=1):
     file_path = None
