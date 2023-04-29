@@ -15,6 +15,7 @@ from ttl_set import TtlSet
 from config import APP_ID, APP_SECRET, VERIFICATION_TOKEN, LARK_HOST
 from daily_hot_news import build_all_news_block
 from speak import get_video
+from ocr import image_meme, image_ocr
 
 logger = setup_logger('my_gpt_reader_server')
 
@@ -162,6 +163,7 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
     # 处理文本和链接
     file_content = json.loads(message["content"])
     result = None
+    is_use_web_gpt = False
     if message_type == 'text' and "text" in file_content:
         result = extract_text_and_links_from_content(file_content)
     elif message_type == 'post' and "content" in file_content:
@@ -170,7 +172,9 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
     if result is not None:
         item_text = result["text"]
         item_urls = result["link"]
-        update_thread_history(thread_message_history, parent_thread_id, item_text, item_urls)
+        is_use_web_gpt = item_text.startswith('/use_web')
+        print(f"item_text -> {item_text},is_use_web_gpt -> {is_use_web_gpt}")
+        update_thread_history(thread_message_history, parent_thread_id, item_text, item_urls, None, is_use_web_gpt)
 
     if file_md5_name is not None:
         update_thread_history(thread_message_history, parent_thread_id, None, None, file_md5_name)
@@ -178,12 +182,12 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
         update_thread_history(thread_message_history, parent_thread_id, [voicemessage])
 
     # 处理 GPT 请求
-    handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicemessage)
+    handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicemessage, is_use_web_gpt)
 
     return jsonify()
 
 
-def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicemessage):
+def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicemessage, is_use_web_gpt):
     urls = thread_message_history[parent_thread_id]['context_urls']
     file = thread_message_history[parent_thread_id]['file']
     text = thread_message_history[parent_thread_id]['dialog_texts']
@@ -197,7 +201,7 @@ def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicem
         elif len(urls) > 0:
             gpt_response = get_answer_from_llama_web(text, list(urls))
         else:
-            gpt_response = get_answer_from_chatGPT(text)
+            gpt_response = get_answer_from_chatGPT(text, parent_thread_id, thread_id, is_use_web_gpt)
         
         update_thread_history(thread_message_history, parent_thread_id, ['AI: %s' % insert_space(f'{gpt_response}')])
         logger.info(f"请求成功-接下来调用接口发送消息")
@@ -249,12 +253,12 @@ def schedule_news():
 def refine_image(buffer):
     try:
         # 把 buffer 转化为文案
-        # str_list = image_ocr(buffer)
-        # news_summary_prompt = '请用中文简短概括这篇文章的内容。'
-        # str_list.append(news_summary_prompt)
-        # answer = get_answer_from_chatGPT(str_list)
-        # return answer
         print(f"refine_image")
+        str_list = image_ocr(buffer)
+        news_summary_prompt = '请用中文简短概括这篇文章的内容。'
+        str_list.append(news_summary_prompt)
+        answer = get_answer_from_chatGPT(str_list)
+        return answer
     except Exception as e:
         error = f"refine_image error -> {e}"
         logger.error(error)
@@ -262,9 +266,10 @@ def refine_image(buffer):
     
 def meme_image(buffer):
     try:
-        # answer = image_meme(buffer)
-        # return answer
         print(f"meme_image")
+        answer = image_meme(buffer)
+        # 把文字转化为 midjourney prompt
+        return answer
     except Exception as e:
         error = f"refine_image error -> {e}"
         logger.error(error)

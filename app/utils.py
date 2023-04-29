@@ -179,16 +179,20 @@ def is_authorized(user_id: str) -> bool:
         return user_id in f.read().splitlines()
     
 # 更新文本、链接和文件，用户建立问题以及向量索引
-def update_thread_history(thread_message_history, thread_id, message_str=None, urls=None, file=None):
+def update_thread_history(thread_message_history, thread_id, message_str=None, urls=None, file=None, is_use_web_gpt=False):
     if urls is not None:
         thread_message_history[thread_id]['context_urls'].update(urls)
     if message_str is not None:
         if thread_id in thread_message_history:
-            dialog_texts = thread_message_history[thread_id]['dialog_texts']
-            dialog_texts = dialog_texts + message_str
-            if len(dialog_texts) > MAX_THREAD_MESSAGE_HISTORY:
-                dialog_texts = dialog_texts[-MAX_THREAD_MESSAGE_HISTORY:]
-            thread_message_history[thread_id]['dialog_texts'] = dialog_texts
+            if is_use_web_gpt:
+                thread_message_history[thread_id]['dialog_texts'] = message_str
+            else:
+                dialog_texts = thread_message_history[thread_id]['dialog_texts']
+                dialog_texts = dialog_texts + message_str
+                if len(dialog_texts) > MAX_THREAD_MESSAGE_HISTORY:
+                    dialog_texts = dialog_texts[-MAX_THREAD_MESSAGE_HISTORY:]
+                thread_message_history[thread_id]['dialog_texts'] = dialog_texts
+            
         else:
             thread_message_history[thread_id]['dialog_texts'] = message_str
     if file is not None:

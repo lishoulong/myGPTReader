@@ -86,7 +86,7 @@ class EventManager(object):
     @staticmethod
     def get_handler_with_event(token, encrypt_key):
         dict_data = json.loads(request.data)
-        print(f"dict_data->{dict_data}")
+        # print(f"dict_data->{dict_data}")
         dict_data = EventManager._decrypt_data(encrypt_key, dict_data)
         callback_type = dict_data.get("type")
         # only verification data has callback_type, else is event
