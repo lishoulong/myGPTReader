@@ -26,3 +26,6 @@ gtts==2.3.1
 opuslib==3.0.1
 requests_toolbelt
 revChatGPT==4.2.5
+lavis
+paddleocr
+torch

@@ -14,7 +14,7 @@ from packaging.version import parse
 
 
 
-package_name = 'llama_index'
+package_name = 'revChatGPT'
 url = f'https://pypi.org/pypi/{package_name}/json'
 
 response = requests.get(url)
