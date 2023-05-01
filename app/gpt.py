@@ -81,7 +81,7 @@ def get_answer_from_embedding(messages, file_dict, is_first_message=False):
                  file_dict['embeddings'], file_dict['sources'])
     questions = file_dict['questions']
     formatted_answer = answer
-    if is_first_message:
+    if is_first_message and questions:
         formatted_answer = f"{answer}\n\n您可能会问下面的问题:\n{questions}"
     return formatted_answer
 
