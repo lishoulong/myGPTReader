@@ -4,9 +4,22 @@ import json
 import abc
 import hashlib
 import typing as t
-from utils import dict_2_obj
 from flask import request
-from decrypt import AESCipher
+from utils.decrypt import AESCipher
+
+
+class Obj(dict):
+    def __init__(self, d):
+        for a, b in d.items():
+            if isinstance(b, (list, tuple)):
+                setattr(self, a, [Obj(x) if isinstance(
+                    x, dict) else x for x in b])
+            else:
+                setattr(self, a, Obj(b) if isinstance(b, dict) else b)
+
+
+def dict_2_obj(d: dict):
+    return Obj(d)
 
 
 class Event(object):
@@ -66,7 +79,7 @@ class EventManager(object):
     event_callback_map = dict()
     event_type_map = dict()
     _event_list = [MessageReceiveEvent, UrlVerificationEvent]
-    last_create_time = None 
+    last_create_time = None
 
     def __init__(self):
         for event in EventManager._event_list:
@@ -74,7 +87,8 @@ class EventManager(object):
 
     def register(self, event_type: str) -> t.Callable:
         def decorator(f: t.Callable) -> t.Callable:
-            self.register_handler_with_event_type(event_type=event_type, handler=f)
+            self.register_handler_with_event_type(
+                event_type=event_type, handler=f)
             return f
 
         return decorator
@@ -86,7 +100,7 @@ class EventManager(object):
     @staticmethod
     def get_handler_with_event(token, encrypt_key):
         dict_data = json.loads(request.data)
-        # print(dict_data)
+        # print(f"dict_data->{dict_data}")
         dict_data = EventManager._decrypt_data(encrypt_key, dict_data)
         callback_type = dict_data.get("type")
         # only verification data has callback_type, else is event
@@ -102,7 +116,7 @@ class EventManager(object):
         # get event_type
         event_type = dict_data.get("header").get("event_type")
         create_time = dict_data.get("header").get("create_time")
-        #TODO bugfix: 只有同一个 uid 在相同时间发的多条消息才去重 check if this is a duplicate event
+        # TODO bugfix: 只有同一个 uid 在相同时间发的多条消息才去重 check if this is a duplicate event
         if create_time == EventManager.last_create_time:
             print(f"Duplicate event received: {event_type}")
             return None, None
@@ -113,7 +127,8 @@ class EventManager(object):
         # chat_id = dict_data.get("event").get("message").get("chat_id")
         # print(f'dict_data is: {dict_data}')
         # build event
-        event = EventManager.event_type_map.get(event_type)(dict_data, token, encrypt_key)
+        event = EventManager.event_type_map.get(
+            event_type)(dict_data, token, encrypt_key)
         # get handler
         return EventManager.event_callback_map.get(event_type), event
 
