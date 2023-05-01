@@ -18,7 +18,7 @@ primary_region = "hkg"
 [[services]]
   protocol = "tcp"
   # Internal ports used by the Python and Node.js services
-  internal_port = 5000
+  internal_port = 80
 
   [[services.ports]]
     port = 80
