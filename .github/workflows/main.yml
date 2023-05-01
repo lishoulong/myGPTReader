@@ -83,7 +83,7 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GPT_BOT_AUTO_TASK }}
-          branch: feat/ocr
+          branch: feat/bytem
 
   deploy:
     needs: build_and_deploy
@@ -92,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: feat/ocr
+          ref: feat/bytem
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

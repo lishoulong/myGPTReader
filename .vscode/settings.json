@@ -1,0 +1,12 @@
+{
+	"python.linting.enabled": true,
+	"python.analysis.exclude": [
+		"**/__init__.py"
+	],
+	"python.linting.lintOnSave": false,
+	"[python]": {
+		"editor.defaultFormatter": "ms-python.autopep8"
+	},
+	"python.formatting.provider": "none",
+	"python.testing.autoTestDiscoverOnSaveEnabled": false
+}

@@ -4,7 +4,7 @@ import json
 from event import EventManager
 from flask import Flask, jsonify, request
 from flask_apscheduler import APScheduler
-from utils import setup_logger
+from utils.thread import setup_logger
 from pytz import utc
 from config import VERIFICATION_TOKEN, ENCRYPT_KEY
 from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image
@@ -27,15 +27,21 @@ scheduler.init_app(app)
 # def date_task1():
 #     schedule_news()
 # 用于注册任务的函数
+
+
 def register_task(scheduler, task_id, trigger_type, func, **trigger_args):
-    scheduler.add_job(id=task_id, func=func, trigger=trigger_type, **trigger_args)
+    scheduler.add_job(id=task_id, func=func,
+                      trigger=trigger_type, **trigger_args)
+
 
 # 注册 schedule_news 任务
-register_task(scheduler, 'daily_news_task', 'cron', schedule_news, hour=1, minute=30)
+register_task(scheduler, 'daily_news_task', 'cron',
+              schedule_news, hour=1, minute=30)
 
 event_manager = EventManager()
 event_manager.register("url_verification")(request_url_verify_handler)
 event_manager.register("im.message.receive_v1")(message_receive_event_handler)
+
 
 @app.errorhandler
 def msg_error_handler(ex):
@@ -53,10 +59,12 @@ def callback_event_handler():
     dict_data = json.loads(request.data)
     # logger.info(f"api-endpoint dict_data->{dict_data}")
     logger.info('=====> api-endpoint !')
-    event_handler, event = event_manager.get_handler_with_event(VERIFICATION_TOKEN, ENCRYPT_KEY)
+    event_handler, event = event_manager.get_handler_with_event(
+        VERIFICATION_TOKEN, ENCRYPT_KEY)
     if event_handler is None:
         return jsonify()
     return event_handler(event)
+
 
 @app.route("/api-image-meme", methods=["POST"])
 def image_meme_handler():
@@ -69,12 +77,13 @@ def image_meme_handler():
 
     buffer = file.read()
     logger.info(f'=====> apiapiapi')
-    
+
     try:
         answer = meme_image(buffer)
         return jsonify({'result': answer})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route("/api-image-ocr", methods=["POST"])
 def image_ocr_handler():
@@ -87,12 +96,13 @@ def image_ocr_handler():
 
     buffer = file.read()
     logger.info(f'=====> apiapiapi')
-    
+
     try:
         answer = refine_image(buffer)
         return jsonify({'result': answer})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     # init()

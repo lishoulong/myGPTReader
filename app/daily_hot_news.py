@@ -6,7 +6,7 @@ import feedparser
 import html2text
 import concurrent.futures
 
-from gpt import get_answer_from_llama_web
+from gpt import get_answer_from_web_embedding
 # 获取当前文件的绝对路径
 current_file_path = os.path.abspath(__file__)
 # 获取当前文件所在的目录
@@ -21,6 +21,7 @@ MAX_DESCRIPTION_LENGTH = 300
 MAX_POSTS = 5
 gpt_keys = []
 
+
 def cut_string(text):
     words = text.split()
     new_text = ""
@@ -33,14 +34,17 @@ def cut_string(text):
 
     return new_text.strip() + '...'
 
+
 def get_summary_from_gpt_thread(url):
     news_summary_prompt = '请用中文简短概括这篇文章的内容。'
-    return str(get_answer_from_llama_web([news_summary_prompt], [url]))
+    return str(get_answer_from_web_embedding([news_summary_prompt], [url]))
+
 
 def get_summary_from_gpt(url):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(get_summary_from_gpt_thread, url)
         return future.result(timeout=300)
+
 
 def get_description(news_key, entry):
     gpt_answer = None
@@ -55,12 +59,14 @@ def get_description(news_key, entry):
         summary = cut_string(get_text_from_html(entry.summary))
     return summary
 
+
 def get_text_from_html(html):
     text_maker = html2text.HTML2Text()
     text_maker.ignore_links = True
     text_maker.ignore_tables = False
     text_maker.ignore_images = True
     return text_maker.handle(html)
+
 
 def get_post_urls_with_title(news_key, rss_url):
     feed = feedparser.parse(rss_url)
@@ -78,8 +84,9 @@ def get_post_urls_with_title(news_key, rss_url):
         updated_posts.append(updated_post)
         if len(updated_posts) >= MAX_POSTS:
             break
-        
+
     return updated_posts
+
 
 def build_slack_blocks(title, news):
     items = {
@@ -106,6 +113,7 @@ def build_slack_blocks(title, news):
     items["content"] = blocks
     return items
 
+
 def build_hot_news_blocks(news_key):
     rss = rss_urls[news_key]['rss']['hot']
     print(f"rssrss=====>>>{rss}")
@@ -114,10 +122,12 @@ def build_hot_news_blocks(news_key):
         rss['name'], hot_news)
     return hot_news_blocks
 
+
 def build_all_news_block():
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # 使用字典推导式来创建一个包含所有 rss 任务的字典
-        rss_tasks = {key: executor.submit(build_hot_news_blocks, key) for key in rss_urls}
+        rss_tasks = {key: executor.submit(
+            build_hot_news_blocks, key) for key in rss_urls}
 
         # 使用列表推导式来获取所有任务的结果
         all_news_blocks = [task.result() for task in rss_tasks.values()]

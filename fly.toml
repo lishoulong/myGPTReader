@@ -6,7 +6,7 @@ kill_timeout = 5
 primary_region = "hkg"
 
 [build]
-  image = "lishoulong/gpt-reader-bot:v1.0.295"
+  image = "lishoulong/gpt-reader-bot:v1.0.299"
   dockerfile = "Dockerfile"
 
 [build.settings]
@@ -18,7 +18,7 @@ primary_region = "hkg"
 [[services]]
   protocol = "tcp"
   # Internal ports used by the Python and Node.js services
-  internal_port = 5000
+  internal_port = 80
 
   [[services.ports]]
     port = 80
