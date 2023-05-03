@@ -14,7 +14,7 @@ from config import OPENAI_API_KEY, ACCESS_TOKEN
 
 logging = setup_logger('my_gpt_reader_gpt')
 openai.api_key = OPENAI_API_KEY
-print(f'OPENAI_API_KEY =>> {OPENAI_API_KEY}')
+logging.info(f'OPENAI_API_KEY =>> {OPENAI_API_KEY}')
 # use chatgpt web to answer
 chatbot = {}
 obj = {}
@@ -77,12 +77,16 @@ def get_answer_from_chatGPT(messages, parent_thread_id, thread_id, is_use_web_gp
 
 def get_answer_from_embedding(messages, file_dict, is_first_message=False):
     dialog_messages = format_dialog_messages(messages)
-    answer = ask(dialog_messages,
-                 file_dict['embeddings'], file_dict['sources'])
-    questions = file_dict['questions']
+    print(f'get_answer_from_embedding dialog_messages -> {dialog_messages}')
+    answer = "已经建立索引，请继续提问"
+    if dialog_messages.strip():
+        print(f'dialog_messages 为空-> {dialog_messages.strip()}')
+        answer = ask(dialog_messages,
+                     file_dict['embeddings'], file_dict['sources'])
+    summarizes = file_dict['summarizes']
     formatted_answer = answer
-    if is_first_message and questions:
-        formatted_answer = f"{answer}\n\n您可能会问下面的问题:\n{questions}"
+    if is_first_message and summarizes:
+        formatted_answer = f"{answer}\n\n文章内容总结如下:\n{summarizes}"
     return formatted_answer
 
 

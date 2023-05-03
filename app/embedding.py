@@ -1,4 +1,5 @@
 import os
+import re
 import openai
 import json
 import math
@@ -11,12 +12,14 @@ import pandas as pd
 from pathlib import Path
 from typing import List
 from sklearn.cluster import KMeans
+from utils.thread import setup_logger
 COMPLETIONS_MODEL = "gpt-3.5-turbo"
 EMBEDDING_MODEL = "text-embedding-ada-002"
 CONTEXT_TOKEN_LIMIT = 1500
 TOKENS_PER_TOPIC = 2000
 TOPIC_NUM_MIN = 3
 TOPIC_NUM_MAX = 10
+logging = setup_logger('my_gpt_reader_gpt')
 
 
 def get_embedding(text: str, model: str = EMBEDDING_MODEL) -> list[float]:
@@ -64,49 +67,48 @@ def get_single_embedding(text: str, model: str = EMBEDDING_MODEL) -> List[float]
     return result.data[0]["embedding"]
 
 
-def get3questions(sources, embeddings):
+def summarize_source(sources, embeddings):
     try:
-        print(f"get3questions start")
-        if not sources:  # Check if sources is empty
+        logging.info(f"summarize_source start")
+        if not sources:
             return []
         matrix = np.vstack(embeddings)
-        # Check the length of embeddings and sources
-        print("Length of embeddings:", len(embeddings))
-        print("Length of sources:", len(sources))
+        logging.info("Length of embeddings:", len(embeddings))
         df = pd.DataFrame({"embedding": np.array(
             embeddings).tolist(), "p": sources})
-        # Perform the clustering
+
         n_clusters = get_topic_num(sources)
-        # Ensure n_clusters is at least 1 and not more than the number of samples
         n_clusters = max(1, min(n_clusters, len(matrix) - 1))
+        logging.info(f"n_clusters n_clusters: {n_clusters}")
         kmeans = KMeans(n_clusters=n_clusters,
                         init="k-means++", random_state=42)
         kmeans.fit(matrix)
         df["Cluster"] = kmeans.labels_
-        df2 = pd.DataFrame({"tokens": [], "prompts": []})
+
+        # Step 1: Generate summaries for each cluster
+        cluster_summaries = []
         for i in range(n_clusters):
             ctx = u""
             ps = df[df.Cluster == i].p.values
             for x in ps:
+                logging.info(f"xxxxxxx -> {x}")
                 if len(ctx) + len(x) > CONTEXT_TOKEN_LIMIT:
+                    logging.info(f"len(ctx) + len(x) -> {len(ctx) + len(x)}")
                     continue
                 ctx += u"\n"+x
-            prompt = u"Suggest a simple, clear, single, short question base on the context, answer in the same language of context\n\nContext:" + \
-                ctx+u"\n\nAnswer with the language used in context, the question is:"
-            df2.loc[len(df2)] = [len("".join(ps)), prompt]
-
-        questions = []
-        sample_size = min(3, len(df2))
-        for prompt in df2.sort_values('tokens', ascending=False).prompts.sample(sample_size).values:
-            # print(prompt)
+            prompt = u"give a detail summarize based on the context\n\nContext:" + \
+                ctx+u"\n\nAnswer with the language Chinese, the summarize is:"
             completion = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}])
-            questions.append(completion.choices[0].message.content)
-            # print(completion.choices[0].message.content)
-        print(f"get3questions end")
-        return questions
+            logging.info(
+                f"summarize_source single ->>>> {prompt}, result ->>>> {completion.choices[0].message.content}")
+            cluster_summaries.append(completion.choices[0].message.content)
+
+        # Step 2: Generate a final summary based on the cluster summaries
+        combined_context = u"\n".join(cluster_summaries)
+        return combined_context
     except Exception as e:
-        print(f"get3questions error -> {e}")
+        logging.error(f"summarize_source error -> {e}")
         traceback.print_exc()
 
 
@@ -114,38 +116,37 @@ def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
     try:
         if not contents:
             return None
-        sources = [source.strip() for content in contents for source in content.split(
-            '\n') if source.strip() != '']
+        sources = [paragraph.strip() for content in contents for paragraph in re.split(
+            r'\n\s*\n', content.strip()) if paragraph.strip() != '']
         # Divide the sources into chunks to process in parallel
         source_chunks = [sources[i:i + batch_size]
                          for i in range(0, len(sources), batch_size)]
+        # 扁平化 sources 列表
+        source_texts = [text for chunk in source_chunks for text in chunk]
         # Process the source chunks in parallel
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-            future_to_embeddings = {executor.submit(
-                get_embeddings, chunk): chunk for chunk in source_chunks}
+            # 修改为 text 作为键，future 作为值
+            future_to_embeddings = {text: executor.submit(
+                get_single_embedding, text) for text in source_texts}
             embeddings = []
             max_length = 0
-            for future in concurrent.futures.as_completed(future_to_embeddings):
-                chunk_embeddings = [np.array(e) for e in future.result()]
-                # Find the maximum length of the embeddings
-                max_length = max(max_length, max(
-                    [len(e) for e in chunk_embeddings]))
-                embeddings.extend(chunk_embeddings)
-        # Ensure all embeddings have the same length
-        embeddings = [np.concatenate([e, np.zeros(
-            max_length - len(e))]) if len(e) != max_length else e for e in embeddings]
+            for text in source_texts:
+                future = future_to_embeddings[text]
+                embedding = np.array(future.result())
+                max_length = max(max_length, len(embedding))
+                embeddings.append(embedding)
         # fly 的普通机器调用下面方法会 OOM
-        questions = []
-        print(f"platform.system() -> {platform.system()}")
+        summarizes = ""
+        logging.info(f"platform.system() -> {platform.system()}")
         if platform.system() != 'Linux':
-            questions = get3questions(sources, embeddings)
+            summarizes = summarize_source(sources, embeddings)
         embeddings_list = [list(embedding) for embedding in embeddings]
         with open(folder, 'w', encoding='utf-8') as handle2:
             json.dump({"sources": sources, "embeddings": embeddings_list,
-                      "questions": questions}, handle2, ensure_ascii=False, indent=4)
-        return {"sources": sources, "embeddings": embeddings, "questions": questions}
+                      "summarizes": summarizes}, handle2, ensure_ascii=False, indent=4)
+        return {"sources": sources, "embeddings": embeddings, "summarizes": summarizes}
     except Exception as e:
-        print(f"file2embedding error -> {e}")
+        logging.error(f"file2embedding error -> {e}")
         traceback.print_exc()
 
 
@@ -188,7 +189,7 @@ def ask(question: str, embeddings, sources):
     for candi in ordered_candidates:
         next = ctx + u"\n" + sources[candi[1]]
         if len(next) > CONTEXT_TOKEN_LIMIT:
-            print(
+            logging.info(
                 f"Exceeded CONTEXT_TOKEN_LIMIT at candidate index {candi[1]}")
             break
         ctx = next
