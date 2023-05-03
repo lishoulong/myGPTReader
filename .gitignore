@@ -1,6 +1,8 @@
 # Environments
 app/.env
 app/__pycache__
+app/utils/__pycache__
+embeddings/cache
 app/.env_product
 app/.env_prod
 app/venv
