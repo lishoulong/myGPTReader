@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 from flask import jsonify
 from utils.thread import (extract_text_and_links_from_content, insert_space, setup_logger,
                           extract_post_text_and_links_from_content, update_thread_history, dialog_context_keep_latest)
@@ -144,6 +145,10 @@ def handle_message_type(message_type, message, thread_id, create_time, open_id):
     return file_md5_name, voicemessage
 
 
+processed_message_ids = set()
+lock = threading.Lock()
+
+
 def message_receive_event_handler(req_data: MessageReceiveEvent):
     event = req_data.event
     sender_id = event['event']["sender"]["sender_id"]
@@ -152,6 +157,14 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
     thread_id = message["message_id"]
     create_time = event['header']["create_time"]
     message_type = message["message_type"]
+    with lock:
+        logger.info(f'thread_idthread_id-{thread_id}')
+        if thread_id in processed_message_ids:
+            logger.info(f'第二次应该进来这个逻辑-{thread_id}')
+            # message with the same id was already processed
+            return jsonify()
+
+        processed_message_ids.add(thread_id)
     if not limiter.allow_request(open_id):
         # 如果用户不在 TtlSet 中，向用户发送提示信息并将用户添加到 TtlSet
         if open_id not in user_ttl_sets:
@@ -165,7 +178,7 @@ def message_receive_event_handler(req_data: MessageReceiveEvent):
             )
             user_ttl_sets[open_id].add(open_id, limiter_time_period)
         return jsonify()
-    logger.info(f'message_type-{message_type}')
+    logger.info(f'message_type:{message_type} - thread_id: {thread_id}')
     file_md5_name, voicemessage = handle_message_type(
         message_type, message, thread_id, create_time, open_id)
 
@@ -240,8 +253,8 @@ def handle_gpt_request(parent_thread_id, thread_id, create_time, open_id, voicem
     file = thread_message_history[parent_thread_id]['file']
     text = thread_message_history[parent_thread_id]['dialog_texts']
 
-    logger.info('=====> Current thread conversation messages are:')
-    logger.info(thread_message_history[parent_thread_id])
+    logger.info(
+        f"Current thread conversation messages are =====> :{thread_message_history[parent_thread_id]}")
     is_first_message = thread_id == parent_thread_id
     try:
         if file is not None:
