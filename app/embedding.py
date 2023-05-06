@@ -91,7 +91,6 @@ def summarize_source(sources, embeddings):
             ctx = u""
             ps = df[df.Cluster == i].p.values
             for x in ps:
-                logging.info(f"xxxxxxx -> {x}")
                 if len(ctx) + len(x) > CONTEXT_TOKEN_LIMIT:
                     logging.info(f"len(ctx) + len(x) -> {len(ctx) + len(x)}")
                     continue

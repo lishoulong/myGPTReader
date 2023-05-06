@@ -122,11 +122,6 @@ class EventManager(object):
             return None, None
         else:
             EventManager.last_create_time = create_time
-        # message_id = dict_data.get("event").get("message").get("message_id")
-        # event_id = dict_data.get("header").get("event_id")
-        # chat_id = dict_data.get("event").get("message").get("chat_id")
-        # print(f'dict_data is: {dict_data}')
-        # build event
         event = EventManager.event_type_map.get(
             event_type)(dict_data, token, encrypt_key)
         # get handler

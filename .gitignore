@@ -10,3 +10,4 @@ venv
 temp/node_modules
 .DS_Store
 secrets.sh
+gpt-reader/node_modules

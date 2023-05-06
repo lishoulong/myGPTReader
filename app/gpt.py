@@ -3,6 +3,8 @@ import os
 import json
 import openai
 import PyPDF2
+import time
+import traceback
 import revChatGPT
 from embedding import file2embedding, ask
 from revChatGPT.V1 import Chatbot
@@ -21,46 +23,57 @@ obj = {}
 
 
 def get_answer_from_web(dialog_messages, parent_thread_id, thread_id):
-    logging.info(
-        f'=====> Use chatGPT WEB to answer! conversation_id={thread_id}, parent_id={parent_thread_id}, if equal = {thread_id == parent_thread_id}')
-    chatbot = get_chatbot(parent_thread_id, thread_id)
-    # thread_id == parent_thread_id 表示飞书新启动一个消息，那么这时候需要把 chatgpt 的 parent_id 清空或者重新获取历史的对应关系
-    parent_id = get_parent_id(
-        parent_thread_id) if chatbot.parent_id is None or thread_id == parent_thread_id else None
-    response = ""
-    logging.info(
-        f"conversation_mapping-{chatbot.conversation_mapping}, conversation_id - {chatbot.conversation_id}, parent_id - {parent_id}")
-    # 适用于重启了程序，在之前的历史记录上重新回复消息，根据飞书的 parent_thread_id 获取到了 chatgpt 的 parent_id
-    update_chatbot_conversation_mapping(chatbot, parent_id)
-    # 如果出现 gpt4 限流的问题，需要降级到 gpt-3.5-turbo
-    model = ""
     try:
-        model = "gpt-4"
-        response = ask_chatbot(chatbot, dialog_messages, model, parent_id)
-        print(f"get_answer_from_chatGPT => {response}")
-    except revChatGPT.typings.Error as e:
-        # 429错误处理
-        if "model_cap_exceeded" in str(e):
-            # 降级到较低版本的API
-            model = "gpt-3.5-turbo"
+        logging.info(
+            f'=====> Use chatGPT WEB to answer! conversation_id={thread_id}, parent_id={parent_thread_id}, if equal = {thread_id == parent_thread_id}')
+        chatbot = get_chatbot(parent_thread_id, thread_id)
+        # thread_id == parent_thread_id 表示飞书新启动一个消息，那么这时候需要把 chatgpt 的 parent_id 清空或者重新获取历史的对应关系
+        parent_id = get_parent_id(
+            parent_thread_id) if chatbot.parent_id is None or thread_id == parent_thread_id else None
+        response = ""
+        logging.info(
+            f"conversation_mapping-{chatbot.conversation_mapping}, conversation_id - {chatbot.conversation_id}, parent_id - {parent_id}")
+        # 适用于重启了程序，在之前的历史记录上重新回复消息，根据飞书的 parent_thread_id 获取到了 chatgpt 的 parent_id
+        update_chatbot_conversation_mapping(chatbot, parent_id)
+        logging.info("after update_chatbot_conversation_mapping ->>>")
+        # 如果出现 gpt4 限流的问题，需要降级到 gpt-3.5-turbo
+        # model = ""
+        start = time.time()
+        # model = "gpt-3.5-turbo"
+        # response = ask_chatbot(chatbot, dialog_messages, model, parent_id)
+        try:
+            model = "gpt-4"
             response = ask_chatbot(chatbot, dialog_messages, model, parent_id)
-            print(
-                f"get_answer_from_chatGPT (fallback to gpt-3.5-turbo) => {response}")
-        else:
-            raise e
-    # 把 parent_thread_id 和 chatbot.parent_id 对应关系写入文件系统中，下次进来直接从文件系统根据 parent_thread_id 读取这个 parent_id
-    write_parent_id(parent_thread_id, chatbot.parent_id)
-    update_parent_child_id(chatbot.conversation_id, chatbot.parent_id)
-    return f"({model}) {response}"
+            end = time.time()
+            logging.info(
+                f"end get_answer_from_chatGPT(gpt-4) => {response} -> time interval: {end-start}")
+        except revChatGPT.typings.Error as e:
+            # 429错误处理
+            if "model_cap_exceeded" in str(e):
+                # 降级到较低版本的API
+                model = "gpt-3.5-turbo"
+                response = ask_chatbot(
+                    chatbot, dialog_messages, model, parent_id)
+                logging.info(
+                    f"get_answer_from_chatGPT (fallback to gpt-3.5-turbo) => {response} -> time interval: {end-start}")
+            else:
+                raise e
+        # 把 parent_thread_id 和 chatbot.parent_id 对应关系写入文件系统中，下次进来直接从文件系统根据 parent_thread_id 读取这个 parent_id
+        write_parent_id(parent_thread_id, chatbot.parent_id)
+        update_parent_child_id(chatbot.conversation_id, chatbot.parent_id)
+        return f"({model}) {response}"
+    except Exception as e:
+        logging.error(f"get_answer_from_web error -> {e}")
+        traceback.print_exc()
 
 
 def get_answer_from_openapi(dialog_messages):
-    logging.info('=====> Use chatGPT OPENAPI to answer!')
-    logging.info(dialog_messages)
+    logging.info(f"start Use chatGPT OPENAPI to answer!->{dialog_messages}")
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": dialog_messages}]
     )
+    logging.info(f"end Use chatGPT OPENAPI to answer!->{dialog_messages}")
     return completion.choices[0].message.content
 
 
@@ -145,7 +158,16 @@ def get_chatbot(parent_thread_id, thread_id):
         }, conversation_id=None, parent_id=None, session_client=None, lazy_loading=False)
         obj[parent_thread_id] = chatbot
     else:
-        chatbot = obj[parent_thread_id]
+        # 如果重新启动服务，这是内存中也没有 obj 了
+        try:
+            chatbot = obj[parent_thread_id]
+        except KeyError as e:
+            logging.info('=====> get_chatbot error {e}, initialize chatbot')
+            chatbot = Chatbot(config={
+                "access_token": ACCESS_TOKEN,
+                "paid": True,
+            }, conversation_id=None, parent_id=None, session_client=None, lazy_loading=False)
+            obj[parent_thread_id] = chatbot
     return chatbot
 
 
@@ -159,12 +181,12 @@ def update_chatbot_conversation_mapping(chatbot, parent_id):
         else:
             # 提取文件内容
             chatbot.conversation_mapping = get_info_from_file()
-        logging.info(
-            f"conversation_mapping1111- conversation_mapping {chatbot.conversation_mapping }")
+        # logging.info(
+        #     f"conversation_mapping1111- conversation_mapping {chatbot.conversation_mapping }")
         chatbot.conversation_id = find_key_by_value(
             parent_id, chatbot.conversation_mapping)
-        logging.info(
-            f"conversation_mapping222- conversation_id {chatbot.conversation_id }")
+        # logging.info(
+        #     f"conversation_mapping222- conversation_id {chatbot.conversation_id }")
 
 
 def ask_chatbot(chatbot, dialog_messages, model, parent_id):

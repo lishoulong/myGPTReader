@@ -1,15 +1,3 @@
-# Quickly develop a bot
-
-> ⚠️ In order to facilitate the implementation of this tutorial, a reverse proxy tool (ngrok) is used. This tool is only suitable for the development and testing phase and cannot be used in the production environment. Before using it, you need to confirm whether it complies with the company's network security policy.
-
-This example shows how to use the Open Platform's bot function to have a bot receive user messages and make replies. You
-can extend the event processing functions of bot based on this example.
-
-## Runtime environment
-
-- [Python 3](https://www.python.org/)
-- [lt](xxxxxx) (intranet penetration tool)
-
 ## Prep work
 
 1. In [Developer Console](https://open.feishu.cn/app/), click **Create custom app**, then click the app name to go to
@@ -59,18 +47,6 @@ grpc_tools_node_protoc --js_out=import_style=commonjs,binary:. --grpc_out=. --pl
 
 Ensure that [Docker](https://www.docker.com/) has been installed before running. You can choose to run your code either
 with Docker or locally.
-
-**Mac/Linux**
-
-```
-sh exec.sh
-```
-
-**Windows**
-
-```
-.\exec.ps1
-```
 
 ## Running Locally
 
