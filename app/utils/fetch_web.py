@@ -6,7 +6,13 @@ import re
 import requests
 import lxml.html
 from lxml.html.clean import clean_html
+import grpc
+import service_pb2
+import service_pb2_grpc
 from youtube_transcript_api import YouTubeTranscriptApi
+
+channel = grpc.insecure_channel("localhost:50051")
+stub = service_pb2_grpc.MyServiceStub(channel)
 
 
 def get_urls(urls):
@@ -36,10 +42,29 @@ def scrape_website(url: str) -> str:
         return f"Error: {e}"
 
 
+def puppe_scrape_website(url: str) -> str:
+    request = service_pb2.HelloRequest(url=url)
+    response = stub.webCrawl(request)
+    result = response.result
+    print(
+        f'response 成功=>{response.status_code} ->> {response.status_code == 200}')
+    if response.status_code == 200:
+        try:
+            logging.info(f'scrape_website 成功{response.status_code}')
+            text_content = html2text.html2text(result)
+            return text_content
+        except Exception as e:
+            logging.warning(f"html2text.html2text error: {e}")
+            return f"Error: {response.status_code} - {e}"
+    else:
+        print(f"请求失败，状态码：{response.status_code}")
+        return f"Error: {response.status_code} - {result}"
+
+
 def get_text_from_urls(urls):
     documents = []
     for url in urls['page_urls']:
-        document = scrape_website(url)
+        document = puppe_scrape_website(url)
         documents.append(document)
     if len(urls['youtube_urls']) > 0:
         for url in urls['youtube_urls']:

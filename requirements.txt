@@ -8,8 +8,8 @@ feedparser==6.0.10
 validators==0.20.0
 langdetect==1.0.9
 youtube-transcript-api==0.5.0
-# grpcio==1.53.0
-# grpcio-tools==1.53.0
+grpcio==1.53.0
+grpcio-tools==1.53.0
 protobuf==4.22.1
 EbookLib==0.18
 PyPDF2==3.0.1
