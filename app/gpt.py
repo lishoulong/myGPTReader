@@ -65,6 +65,7 @@ def get_answer_from_web(dialog_messages, parent_thread_id, thread_id):
     except Exception as e:
         logging.error(f"get_answer_from_web error -> {e}")
         traceback.print_exc()
+        return str(e)
 
 
 def get_answer_from_openapi(dialog_messages):

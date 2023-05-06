@@ -53,7 +53,6 @@ class MessageApiClient(object):
         url = "{}{}".format(
             self._lark_host, FILE_URI
         )
-        print(f'self.tenant_access_token--{self.tenant_access_token}')
         headers = {
             "Authorization": "Bearer " + self.tenant_access_token,
         }
@@ -79,12 +78,10 @@ class MessageApiClient(object):
 
     def reply_message(self, message_id, msg_type, content, uuid):
         # send message to user, implemented based on Feishu open api capability. doc link: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
-        if not self.tenant_access_token:
-            self._authorize_tenant_access_token()
+        self._authorize_tenant_access_token()
         url = "{}{}/{}/reply".format(
             self._lark_host, MESSAGE_URI, message_id
         )
-        print(f'self.tenant_access_token--{self.tenant_access_token}')
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self.tenant_access_token,
@@ -96,16 +93,11 @@ class MessageApiClient(object):
             "uuid": uuid
         }
         resp = requests.post(url=url, headers=headers, json=req_body)
-        if resp.status_code == 400:
-            self._authorize_tenant_access_token()
-            headers["Authorization"] = "Bearer " + self.tenant_access_token
-            resp = requests.post(url=url, headers=headers, json=req_body)
         MessageApiClient._check_error_response(resp)
 
     def send(self, receive_id_type, receive_id, msg_type, content, uuid):
         # send message to user, implemented based on Feishu open api capability. doc link: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
-        if not self.tenant_access_token:
-            self._authorize_tenant_access_token()
+        self._authorize_tenant_access_token()
         url = "{}{}?receive_id_type={}".format(
             self._lark_host, MESSAGE_URI, receive_id_type
         )
@@ -121,10 +113,6 @@ class MessageApiClient(object):
             "uuid": uuid
         }
         resp = requests.post(url=url, headers=headers, json=req_body)
-        if resp.status_code == 400:
-            self._authorize_tenant_access_token()
-            headers["Authorization"] = "Bearer " + self.tenant_access_token
-            resp = requests.post(url=url, headers=headers, json=req_body)
         MessageApiClient._check_error_response(resp)
 
     def _authorize_tenant_access_token(self):

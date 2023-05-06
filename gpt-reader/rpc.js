@@ -25,6 +25,7 @@ async function processEvent(call, callback) {
 	try {
 		webContent = await pupRequest(content)
 	} catch (e) {
+		console.log('pupRequest fail', e);
 		status_code = 500;
 		webContent = e.message;
 	}
