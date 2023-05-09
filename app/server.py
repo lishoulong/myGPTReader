@@ -6,8 +6,10 @@ from flask import Flask, jsonify, request
 from flask_apscheduler import APScheduler
 from utils.thread import setup_logger
 from pytz import utc
+import traceback
 from config import VERIFICATION_TOKEN, ENCRYPT_KEY
 from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image
+from gpt import get_answer_from_web_embedding
 
 logger = setup_logger('my_gpt_reader_server')
 
@@ -64,6 +66,28 @@ def callback_event_handler():
     if event_handler is None:
         return jsonify()
     return event_handler(event)
+
+@app.route("/api-summarize", methods=["POST"])
+def summarize_handler():
+    try:
+        # init callback instance and handle
+        dict_data = json.loads(request.data)
+        # logger.info(f"api-endpoint dict_data->{dict_data}")
+        logger.info(f'api-summarize =====> : {dict_data}')
+        urls = dict_data.get("urls")
+        question = dict_data.get("question", [])
+        content = dict_data.get("content", "")
+
+        logger.info(f"format_dialog_messages -> {question}")
+        gpt_response = get_answer_from_web_embedding(question, urls, True, content)
+        response = jsonify({'result': gpt_response})
+        response.status_code = 200
+        return response
+    except Exception as e:
+        logger.info(f'api-summarize error : {e}')
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    
 
 
 @app.route("/api-image-meme", methods=["POST"])

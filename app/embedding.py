@@ -112,6 +112,7 @@ def summarize_source(sources, embeddings):
 
 def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
     try:
+        logging.info(f"file2embedding folder -> {folder}, contents -> {contents}")
         if not contents:
             return None
         sources = [paragraph.strip() for content in contents for paragraph in re.split(
@@ -121,6 +122,7 @@ def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
                          for i in range(0, len(sources), batch_size)]
         # 扁平化 sources 列表
         source_texts = [text for chunk in source_chunks for text in chunk]
+        logging.info(f"source_texts ->>>>>> -> {source_texts}")
         # Process the source chunks in parallel
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
             # 修改为 text 作为键，future 作为值
@@ -129,6 +131,7 @@ def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
             embeddings = []
             max_length = 0
             for text in source_texts:
+                logging.info(f"source_texts text -> {text}")
                 future = future_to_embeddings[text]
                 embedding = np.array(future.result())
                 max_length = max(max_length, len(embedding))

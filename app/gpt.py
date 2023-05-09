@@ -94,7 +94,7 @@ def get_answer_from_embedding(messages, file_dict, is_first_message=False):
     print(f'get_answer_from_embedding dialog_messages -> {dialog_messages}')
     answer = "已经建立索引，请继续提问"
     if dialog_messages.strip():
-        print(f'dialog_messages 为空-> {dialog_messages.strip()}')
+        print(f'dialog_messages 非空-> {dialog_messages.strip()}')
         answer = ask(dialog_messages,
                      file_dict['embeddings'], file_dict['sources'])
     summarizes = file_dict['summarizes']
@@ -117,15 +117,19 @@ def get_answer_from_file_embedding(messages, file, is_first_message=False):
     return get_answer_from_embedding(messages, file_dict, is_first_message)
 
 
-def get_answer_from_web_embedding(messages, urls, is_first_message=False):
+def get_answer_from_web_embedding(messages, urls, is_first_message=False, content=None):
     logging.info('=====> Use llama web with chatGPT to answer!')
     combained_urls = get_urls(urls)
-    logging.info(combained_urls)
+    logging.info(f"combained_urls -> {combained_urls}")
     json_path = get_json_path(''.join(sorted(urls)))
 
     file_dict = {}
+    documents = content
     if not (json_path).exists():
-        documents = get_text_from_urls(combained_urls)
+        logging.info(f'get_answer_from_web_embedding content => {content}')
+        if not content:
+            logging.info('content is None')
+            documents = get_text_from_urls(combained_urls)
         file_dict = file2embedding(json_path, documents)
     else:
         with open(json_path, 'r', encoding='utf-8') as f:

@@ -16,19 +16,15 @@ stub = service_pb2_grpc.MyServiceStub(channel)
 
 
 def get_urls(urls):
-    rss_urls = []
     page_urls = []
     youtube_urls = []
     for url in urls:
         if validators.url(url):
-            feed = feedparser.parse(url)
-            if hasattr(feed, 'version') and feed.version:
-                rss_urls.append(url)
-            elif check_if_youtube_url(url):
+            if check_if_youtube_url(url):
                 youtube_urls.append(url)
             else:
                 page_urls.append(url)
-    return {'rss_urls': rss_urls, 'page_urls': page_urls, 'youtube_urls': youtube_urls}
+    return {'page_urls': page_urls, 'youtube_urls': youtube_urls}
 
 
 def scrape_website(url: str) -> str:
