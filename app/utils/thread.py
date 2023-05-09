@@ -62,23 +62,15 @@ def insert_space(text):
     return text
 
 def setup_logger(name, log_level=logging.INFO):
-    # 创建一个日志器（logger）
+    # 检查是否已经添加了 console handler
     logger = logging.getLogger(name)
-    logger.setLevel(log_level)
-
-    # 创建一个处理器（handler）以将日志消息输出到控制台
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(log_level)
-
-    # 定义一个包含时间戳的日志格式
-    log_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-    # 将日志格式应用于处理器
-    console_handler.setFormatter(log_format)
-
-    # 将处理器添加到日志器
-    logger.addHandler(console_handler)
-
+    if not logger.hasHandlers():
+        logger.setLevel(log_level)
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(log_level)
+        log_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console_handler.setFormatter(log_format)
+        logger.addHandler(console_handler)
     return logger
 
 def is_authorized(user_id: str) -> bool:
