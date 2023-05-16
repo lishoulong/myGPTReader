@@ -126,7 +126,8 @@ def get_answer_from_web_embedding(messages, urls, is_first_message=False, conten
     file_dict = {}
     documents = content
     if not (json_path).exists():
-        logging.info(f'get_answer_from_web_embedding content => {content}')
+        logging.info(
+            f'get_answer_from_web_embedding content => {len(content)}')
         if not content:
             logging.info('content is None')
             documents = get_text_from_urls(combained_urls)

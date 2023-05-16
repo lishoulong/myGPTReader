@@ -73,7 +73,7 @@ def summarize_source(sources, embeddings):
         if not sources:
             return []
         matrix = np.vstack(embeddings)
-        logging.info("Length of embeddings:", len(embeddings))
+        logging.info(f"Length of embeddings: {len(embeddings)}")
         df = pd.DataFrame({"embedding": np.array(
             embeddings).tolist(), "p": sources})
 
@@ -92,6 +92,8 @@ def summarize_source(sources, embeddings):
             ps = df[df.Cluster == i].p.values
             for x in ps:
                 if len(ctx) + len(x) > CONTEXT_TOKEN_LIMIT:
+                    logging.info(
+                        f'len(ctx) + len(x)> CONTEXT_TOKEN_LIMIT -> {len(ctx) + len(x)} -> ctx is {ctx}')
                     continue
                 ctx += u"\n"+x
             prompt = u"give a detail summarize based on the context\n\nContext:" + \
@@ -103,7 +105,12 @@ def summarize_source(sources, embeddings):
             cluster_summaries.append(completion.choices[0].message.content)
 
         # Step 2: Generate a final summary based on the cluster summaries
-        combined_context = u"\n".join(cluster_summaries)
+        combined_context = u"<br>".join(cluster_summaries)
+        # new_prompt = u"delete the head and tail messages about the website, give a detailed summarize based on the context\n\nContext:" + \
+        #     combined_context+u"\n\nAnswer with the language Chinese, the answer is:"
+        # new_completion = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo", messages=[{"role": "user", "content": new_prompt}])
+        # logging.info(f"new_completion -> {new_completion}")
         return combined_context
     except Exception as e:
         logging.error(f"summarize_source error -> {e}")
@@ -112,17 +119,18 @@ def summarize_source(sources, embeddings):
 
 def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
     try:
-        logging.info(f"file2embedding folder -> {folder}, contents -> {contents}")
         if not contents:
             return None
         sources = [paragraph.strip() for content in contents for paragraph in re.split(
             r'\n\s*\n', content.strip()) if paragraph.strip() != '']
+        logging.info(
+            f"file2embedding folder -> {folder}, contents -> {len(contents)}, sources -> {len(sources)}")
         # Divide the sources into chunks to process in parallel
         source_chunks = [sources[i:i + batch_size]
                          for i in range(0, len(sources), batch_size)]
         # 扁平化 sources 列表
         source_texts = [text for chunk in source_chunks for text in chunk]
-        logging.info(f"source_texts ->>>>>> -> {source_texts}")
+        logging.info(f"source_texts ->>>>>> -> {len(source_texts)}")
         # Process the source chunks in parallel
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
             # 修改为 text 作为键，future 作为值
@@ -131,7 +139,7 @@ def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
             embeddings = []
             max_length = 0
             for text in source_texts:
-                logging.info(f"source_texts text -> {text}")
+                logging.info(f"source_texts text -> {len(text)}")
                 future = future_to_embeddings[text]
                 embedding = np.array(future.result())
                 max_length = max(max_length, len(embedding))

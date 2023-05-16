@@ -67,19 +67,23 @@ def callback_event_handler():
         return jsonify()
     return event_handler(event)
 
+
 @app.route("/api-summarize", methods=["POST"])
 def summarize_handler():
     try:
         # init callback instance and handle
         dict_data = json.loads(request.data)
         # logger.info(f"api-endpoint dict_data->{dict_data}")
-        logger.info(f'api-summarize =====> : {dict_data}')
         urls = dict_data.get("urls")
         question = dict_data.get("question", [])
         content = dict_data.get("content", "")
 
         logger.info(f"format_dialog_messages -> {question}")
-        gpt_response = get_answer_from_web_embedding(question, urls, True, content)
+        if_first_question = True
+        if len(question) > 0:
+            if_first_question = False
+        gpt_response = get_answer_from_web_embedding(
+            question, urls, if_first_question, content)
         response = jsonify({'result': gpt_response})
         response.status_code = 200
         return response
@@ -87,7 +91,6 @@ def summarize_handler():
         logger.info(f'api-summarize error : {e}')
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-    
 
 
 @app.route("/api-image-meme", methods=["POST"])

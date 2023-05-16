@@ -1,6 +1,5 @@
 import logging
 import html2text
-import feedparser
 import validators
 import re
 import requests
@@ -47,7 +46,7 @@ def puppe_scrape_website(url: str) -> str:
     if response.status_code == 200:
         try:
             logging.info(f'scrape_website 成功{response.status_code}')
-            text_content = html2text.html2text(result)
+            text_content = parse_html(result)
             return text_content
         except Exception as e:
             logging.warning(f"html2text.html2text error: {e}")
@@ -55,6 +54,10 @@ def puppe_scrape_website(url: str) -> str:
     else:
         print(f"请求失败，状态码：{response.status_code}")
         return f"Error: {response.status_code} - {result}"
+
+
+def parse_html(html):
+    return html2text.html2text(html)
 
 
 def get_text_from_urls(urls):
