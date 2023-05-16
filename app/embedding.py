@@ -147,8 +147,8 @@ def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
         # fly 的普通机器调用下面方法会 OOM
         summarizes = ""
         logging.info(f"platform.system() -> {platform.system()}")
-        if platform.system() != 'Linux':
-            summarizes = summarize_source(sources, embeddings)
+        # if platform.system() != 'Linux':
+        summarizes = summarize_source(sources, embeddings)
         embeddings_list = [list(embedding) for embedding in embeddings]
         with open(folder, 'w', encoding='utf-8') as handle2:
             json.dump({"sources": sources, "embeddings": embeddings_list,
