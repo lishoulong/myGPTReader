@@ -92,7 +92,7 @@ def get_answer_from_chatGPT(messages, parent_thread_id, thread_id, is_use_web_gp
 def get_answer_from_embedding(messages, file_dict, is_first_message=False):
     dialog_messages = format_dialog_messages(messages)
     print(f'get_answer_from_embedding dialog_messages -> {dialog_messages}')
-    answer = "已经建立索引，请继续提问"
+    answer = ""
     if dialog_messages.strip():
         print(f'dialog_messages 非空-> {dialog_messages.strip()}')
         answer = ask(dialog_messages,
@@ -100,7 +100,7 @@ def get_answer_from_embedding(messages, file_dict, is_first_message=False):
     summarizes = file_dict['summarizes']
     formatted_answer = answer
     if is_first_message and summarizes:
-        formatted_answer = f"{answer}\n\n文章内容总结如下:\n{summarizes}"
+        formatted_answer = f"{summarizes}"
     return formatted_answer
 
 

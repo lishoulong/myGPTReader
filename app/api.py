@@ -34,7 +34,10 @@ class MessageApiClient(object):
         return resp
 
     def webhookRequest(self, content):
+        # 正式 url
         url = "https://open.feishu.cn/open-apis/bot/v2/hook/35581f8a-d488-47c8-b160-d484970e2ccf"
+        # 测试 url
+        # url = "https://open.feishu.cn/open-apis/bot/v2/hook/e6be6eb8-6676-4473-a1dc-e23a83963ae7"
         req_body = {
             "msg_type": "post",
             "content": {

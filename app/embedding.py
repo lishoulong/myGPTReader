@@ -105,7 +105,7 @@ def summarize_source(sources, embeddings):
             cluster_summaries.append(completion.choices[0].message.content)
 
         # Step 2: Generate a final summary based on the cluster summaries
-        combined_context = u"<br>".join(cluster_summaries)
+        combined_context = u" <br> ".join(cluster_summaries)
         # new_prompt = u"delete the head and tail messages about the website, give a detailed summarize based on the context\n\nContext:" + \
         #     combined_context+u"\n\nAnswer with the language Chinese, the answer is:"
         # new_completion = openai.ChatCompletion.create(

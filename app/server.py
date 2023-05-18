@@ -8,7 +8,7 @@ from utils.thread import setup_logger
 from pytz import utc
 import traceback
 from config import VERIFICATION_TOKEN, ENCRYPT_KEY
-from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image
+from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image, schedule_single_news
 from gpt import get_answer_from_web_embedding
 
 logger = setup_logger('my_gpt_reader_server')
@@ -89,6 +89,26 @@ def summarize_handler():
         return response
     except Exception as e:
         logger.info(f'api-summarize error : {e}')
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route("/api-share", methods=["POST"])
+def share_handler():
+    try:
+        dict_data = json.loads(request.data)
+        url = dict_data.get("urls")
+        content = dict_data.get("content", "")
+
+        logger.info(f"api-share content -> {content}")
+
+        share_result = schedule_single_news(url, content)
+
+        response = jsonify({'result': share_result})
+        response.status_code = 200
+        return response
+    except Exception as e:
+        logger.info(f'api-share error : {e}')
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 

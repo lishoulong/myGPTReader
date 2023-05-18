@@ -15,6 +15,7 @@ from gpt import (get_answer_from_chatGPT, get_answer_from_web_embedding,
 from config import APP_ID, APP_SECRET, VERIFICATION_TOKEN, LARK_HOST
 from daily_hot_news import build_all_news_block
 from speak import get_video
+import traceback
 # from ocr import image_meme, image_ocr
 
 logger = setup_logger('my_gpt_reader_server')
@@ -322,6 +323,57 @@ def schedule_news():
             logger.info(f"schedule_news ->>>>>>>>>>>>>>>>>{result}")
         except Exception as e:
             logger.error(f"schedule_news error -> {e}")
+
+
+def generate_news_blocks(input_string):
+    # 根据 <br> 分割字符串
+    segments = input_string.split('<br>')
+
+    news_block = []
+
+    # 遍历分割后的字符串
+    for segment in segments:
+
+        # 如果segment为空字符串，则跳过
+        if not segment.strip():
+            continue
+
+        # 创建一个字典并添加到 news_block 数组中
+        block = {
+            "tag": "text",
+            "text": f"\n{segment}",
+        }
+
+        news_block.append(block)
+
+    return news_block
+
+
+def schedule_single_news(url, content):
+    logger.info("=====> Start to send share news!")
+    new_content = generate_news_blocks(content)
+    new_content.append({
+        "tag": "a",
+        "href": url,
+        "text": f"\n原文链接：<{url}>"
+    })
+    blocks = []
+    blocks.append(new_content)
+    items = {
+        "content": blocks
+    }
+    logger.info(
+        f"schedule_single_news ->>>>>>>>>>>>>>>>> items: {items}")
+
+    try:
+        # 发起网络请求
+        result = message_api_client.webhookRequest(items)
+
+        return result
+    except Exception as e:
+        logger.error(f"schedule_news error -> {e}")
+        traceback.print_exc()
+        return f"网络请求异常: {str(e)}"
 
 
 def refine_image(buffer):
