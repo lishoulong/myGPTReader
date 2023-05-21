@@ -115,6 +115,7 @@ def summarize_source(sources, embeddings):
     except Exception as e:
         logging.error(f"summarize_source error -> {e}")
         traceback.print_exc()
+        return str(e)
 
 
 def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
