@@ -58,7 +58,7 @@ def msg_error_handler(ex):
 @app.route("/api-endpoint", methods=["POST"])
 def callback_event_handler():
     # init callback instance and handle
-    dict_data = json.loads(request.data)
+    # dict_data = json.loads(request.data)
     # logger.info(f"api-endpoint dict_data->{dict_data}")
     logger.info('=====> api-endpoint !')
     event_handler, event = event_manager.get_handler_with_event(
