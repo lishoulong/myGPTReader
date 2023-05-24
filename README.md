@@ -21,10 +21,6 @@
 4. 安装依赖
 
 - pip3 install -r requirements.txt
-- brew install ffmpeg
-
-5. 音频转换工具
-   > openai 支持的音频格式如下：['m4a', 'mp3', 'webm', 'mp4', 'mpga', 'wav', 'mpeg']。但是飞书语音的格式是 OGG 的。要将 OGG 文件转换为受支持的格式（如 MP3），您可以使用 Python 的 pydub 库。首先，您需要安装 pydub 库，以及处理音频文件所需的 ffmpeg 工具。
 
 ## server rpc
 
@@ -90,6 +86,8 @@ with Docker or locally.
    ```
 
 # Feature & bugfix
+
+> feat/chrome 分支主要作用是作为 Chrome 插件 AIReadSite 的搭配使用
 
 - [x] myGptReader 网页爬取能力
 - [x] 支持和 pdf 对话能力，限制 pdf 体积低于 500KB
