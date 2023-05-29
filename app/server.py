@@ -98,6 +98,17 @@ def share_handler():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route("/api-voice", methods=["GET"])
+def voice_handler():
+    try:
+        response = jsonify({'status_code': 200})
+        return response
+    except Exception as e:
+        logger.info(f'api-voice error : {e}')
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route("/api-image-meme", methods=["POST"])
 def image_meme_handler():
     if 'file' not in request.files:
