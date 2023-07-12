@@ -13,9 +13,8 @@ from pathlib import Path
 from typing import List
 from sklearn.cluster import KMeans
 from utils.thread import setup_logger
-COMPLETIONS_MODEL = "gpt-3.5-turbo"
 EMBEDDING_MODEL = "text-embedding-ada-002"
-CONTEXT_TOKEN_LIMIT = 1500
+CONTEXT_TOKEN_LIMIT = 4500
 TOKENS_PER_TOPIC = 2000
 TOPIC_NUM_MIN = 3
 TOPIC_NUM_MAX = 10
@@ -99,7 +98,7 @@ def summarize_source(sources, embeddings):
             prompt = u"give a detail summarize based on the context\n\nContext:" + \
                 ctx+u"\n\nAnswer with the language Chinese, the summarize is:"
             completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}])
+                model="gpt-3.5-turbo-16k", messages=[{"role": "user", "content": prompt}])
             logging.info(
                 f"summarize_source single ->>>> {prompt}, result ->>>> {completion.choices[0].message.content}")
             cluster_summaries.append(completion.choices[0].message.content)
@@ -213,5 +212,5 @@ def ask(question: str, embeddings, sources):
         u"Answer:"
     ])
     completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}])
+        model="gpt-3.5-turbo-16k", messages=[{"role": "user", "content": prompt}])
     return completion.choices[0].message.content
