@@ -1,6 +1,7 @@
 #! /usr/bin/env python3.8
 import logging
 import requests
+from urllib.parse import urlencode
 from requests_toolbelt import MultipartEncoder
 
 # const
@@ -125,6 +126,42 @@ class MessageApiClient(object):
         response = requests.post(url, req_body)
         MessageApiClient._check_error_response(response)
         self._tenant_access_token = response.json().get("tenant_access_token")
+
+    def maiHire():
+        url = "https://api.taou.com/sdk/publish?feed_content_tags=%255B%257B%2522id%2522%253A59709%252C%2522name%2522%253A%2522%25E6%259C%2580%25E9%259A%25BE%25E5%25BF%2598%25E7%259A%2584%25E4%25B8%2580%25E6%25AC%25A1%25E5%258D%2587%25E8%2581%258C%2522%252C%2522text%2522%253A%2522%25E6%259C%2580%25E9%259A%25BE%25E5%25BF%2598%25E7%259A%2584%25E4%25B8%2580%25E6%25AC%25A1%25E5%258D%2587%25E8%2581%258C%2522%257D%255D&fr=friend_feed_guide_normal_v2&container_id=-2001&target=publish_friend_feed&appid=4&access_token=1.10740d756d606d439d8638bcd9f1db85&vc=16.6&version=6.3.6&webviewUserAgent=Mozilla%2F5.0%20%28iPhone%3B%20CPU%20iPhone%20OS%2016_6%20like%20Mac%20OS%20X%29%20AppleWebKit%2F605.1.15%20%28KHTML%2C%20like%20Gecko%29%20Mobile%2F15E148&channel=AppStore&rn_version=0.69.0&sm_did=D2eUVb%2FHEUei69Pl3mYNLY%2F8Mx2GXXw9a3DeeETUoYK3wXf7&net=wifi&session_uuid=899a803d8781438ba421f099609ec51d&push_permit=1&screen_height=2556&launch_uuid=44267ecc9eb6405caaba9b70d5aa3101&density=3&u=225671345&device=iPhone15%2C2&screen_width=1179&udid=f47a1094bf8f4850aa335a48103a4fc6"
+
+        headers = {
+            "Cookie": "session=eyJ1IjoiMjI1NjcxMzQ1Iiwic2VjcmV0IjoiWlFUUzRpcmhORDNJRXdHdU56WWNTc2s3IiwiX2V4cGlyZSI6MTY5MTkwMDIyNDExNywiX21heEFnZSI6ODY0MDAwMDB9&session.sig=uZt8N0Z4DmWA70-BMbK6iwc6OkU",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+
+        data = {
+            "aigc_rewrite": "0",
+            "annoy_type": "0",
+            "at_users": "",
+            "container_id": "-2001",
+            "content": "字节跳动抖音开放平台诚招高级前端和前端专家，工作内容为抖音小程序框架建设和小程序入口及私能力建设，职级2.1~2.2，可base杭州、深圳，有兴趣的小伙伴，抓紧联系起来。",
+            "data_id": "",
+            "data_str": "",
+            "extra_infomation": "{\"feed_content_tags\":\"[]\"}",
+            "hash": "28aa0b06d9784440a7567793b3e63aed",
+            "imgs": "[]",
+            "is_normal_feed": "1",
+            "is_original": "0",
+            "job_card_data_id": "",
+            "job_card_data_str": "",
+            "tag_type": "0",
+            "target": "publish_friend_feed",
+            "template_data": ""
+        }
+
+        try:
+            response = requests.post(
+                url, headers=headers, data=urlencode(data))
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            logging.info("POST maiHire request successful")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"POST request error -> {e}")
 
     @staticmethod
     def _check_error_response(resp):

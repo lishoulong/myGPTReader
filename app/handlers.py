@@ -376,6 +376,18 @@ def schedule_single_news(url, content):
         return f"网络请求异常: {str(e)}"
 
 
+def maiHire():
+    try:
+        # 发起网络请求
+        result = message_api_client.maiHire()
+
+        return result
+    except Exception as e:
+        logger.error(f"maiHire error -> {e}")
+        traceback.print_exc()
+        return f"网络请求异常: {str(e)}"
+
+
 def refine_image(buffer):
     try:
         # 把 buffer 转化为文案

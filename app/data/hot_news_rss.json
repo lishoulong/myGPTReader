@@ -16,41 +16,5 @@
                 "url": "https://rsshub.app/github/trending/daily/any"
             }
         }
-    },
-    "hellogithub": {
-        "name": "hellogithub",
-        "rss": {
-            "hot": {
-                "name": "hellogithub",
-                "url": "https://rsshub.app/hellogithub/hot"
-            }
-        }
-    },
-    "hackmd": {
-        "name": "hackmd",
-        "rss": {
-            "hot": {
-                "name": "hackmd",
-                "url": "https://rsshub.app/hackmd/profile/hackmd"
-            }
-        }
-    },
-    "weixin": {
-        "name": "weixin",
-        "rss": {
-            "hot": {
-                "name": "weixin",
-                "url": "https://rsshub.app/wechat-open/community/xcx-announce"
-            }
-        }
-    },
-    "mishapetrick": {
-        "name": "mishapetrick",
-        "rss": {
-            "hot": {
-                "name": "mishapetrick",
-                "url": "https://rsshub.app/behance/mishapetrick"
-            }
-        }
     }
 }

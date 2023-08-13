@@ -8,7 +8,7 @@ from utils.thread import setup_logger
 from pytz import utc
 import traceback
 from config import VERIFICATION_TOKEN, ENCRYPT_KEY
-from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image, schedule_single_news
+from handlers import request_url_verify_handler, message_receive_event_handler, schedule_news, refine_image, meme_image, schedule_single_news, maiHire
 from gpt import get_answer_from_web_embedding
 
 logger = setup_logger('my_gpt_reader_server')
@@ -28,6 +28,10 @@ def register_task(scheduler, task_id, trigger_type, func, **trigger_args):
 # 注册 schedule_news 任务
 register_task(scheduler, 'weekly_news_task', 'cron',
               schedule_news, day_of_week='mon', hour=9, minute=30)
+
+# 注册任务并在每天早上 10 点执行
+register_task(scheduler, 'weekly_hire_task', 'cron',
+              maiHire, day_of_week='mon-fri', hour=12, minute=0)
 
 event_manager = EventManager()
 event_manager.register("url_verification")(request_url_verify_handler)

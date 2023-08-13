@@ -100,7 +100,6 @@ with Docker or locally.
 - [x] 支持群聊能力
 - [x] 增加按照用户信息限制调用频率的操作
 - [ ] 增加图片内容识别能力
-- [ ] 支持 Code Review 功能
 
 bugfix：
 
