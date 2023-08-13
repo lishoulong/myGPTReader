@@ -31,7 +31,7 @@ register_task(scheduler, 'weekly_news_task', 'cron',
 
 # 注册任务并在每天早上 10 点执行
 register_task(scheduler, 'weekly_hire_task', 'cron',
-              maiHire, day_of_week='mon-fri', hour=12, minute=0)
+              maiHire, hour=10, minute=00)
 
 event_manager = EventManager()
 event_manager.register("url_verification")(request_url_verify_handler)
