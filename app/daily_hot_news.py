@@ -18,7 +18,7 @@ with open(data_file_path, "r") as f:
 
 TODAY = today = date.today()
 MAX_DESCRIPTION_LENGTH = 300
-MAX_POSTS = 5
+MAX_POSTS = 10
 gpt_keys = []
 
 
@@ -88,7 +88,7 @@ def get_post_urls_with_title(news_key, rss_url):
     return updated_posts
 
 
-def build_slack_blocks(title, news):
+def build_feishu_blocks(title, news):
     items = {
         "title": title
     }
@@ -118,12 +118,12 @@ def build_hot_news_blocks(news_key):
     rss = rss_urls[news_key]['rss']['hot']
     print(f"rssrss=====>>>{rss}")
     hot_news = get_post_urls_with_title(news_key, rss['url'])
-    hot_news_blocks = build_slack_blocks(
+    hot_news_blocks = build_feishu_blocks(
         rss['name'], hot_news)
     return hot_news_blocks
 
 
-def build_all_news_block():
+def build_feishu_news_block():
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # 使用字典推导式来创建一个包含所有 rss 任务的字典
         rss_tasks = {key: executor.submit(

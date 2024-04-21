@@ -13,7 +13,7 @@ from event import MessageReceiveEvent, UrlVerificationEvent
 from gpt import (get_answer_from_chatGPT, get_answer_from_web_embedding,
                  get_answer_from_file_embedding, get_text_from_whisper)
 from config import APP_ID, APP_SECRET, VERIFICATION_TOKEN, LARK_HOST
-from daily_hot_news import build_all_news_block
+from daily_hot_news import build_feishu_news_block
 from speak import get_video
 import traceback
 # from ocr import image_meme, image_ocr
@@ -315,7 +315,7 @@ def request_url_verify_handler(req_data: UrlVerificationEvent):
 
 def schedule_news():
     logger.info("=====> Start to send daily news!")
-    all_news_blocks = build_all_news_block()
+    all_news_blocks = build_feishu_news_block()
     for news_item in all_news_blocks:
         try:
             # 发起网络请求
