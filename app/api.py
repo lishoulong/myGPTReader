@@ -1,6 +1,7 @@
 #! /usr/bin/env python3.8
 import logging
 import requests
+import json
 from urllib.parse import urlencode
 from requests_toolbelt import MultipartEncoder
 
@@ -8,6 +9,28 @@ from requests_toolbelt import MultipartEncoder
 TENANT_ACCESS_TOKEN_URI = "/open-apis/auth/v3/tenant_access_token/internal"
 MESSAGE_URI = "/open-apis/im/v1/messages"
 FILE_URI = "/open-apis/im/v1/files"
+
+
+class CozeAPIClient:
+    def __init__(self, personal_access_token):
+        self.base_url = "https://api.coze.cn/open_api/v2/chat"
+        self.headers = {
+            'Authorization': f'Bearer {personal_access_token}',
+            'Content-Type': 'application/json',
+            'Accept': '*/*'
+        }
+
+    def send_message(self, conversation_id, bot_id, user_id, query, stream=False):
+        data = {
+            "conversation_id": conversation_id,
+            "bot_id": bot_id,
+            "user": user_id,
+            "query": query,
+            "stream": stream
+        }
+        response = requests.post(
+            self.base_url, headers=self.headers, data=json.dumps(data))
+        return response
 
 
 class MessageApiClient(object):

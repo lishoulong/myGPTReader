@@ -1,6 +1,5 @@
 import os
 import re
-import openai
 import json
 import math
 import hashlib
@@ -13,12 +12,24 @@ from pathlib import Path
 from typing import List
 from sklearn.cluster import KMeans
 from utils.thread import setup_logger
+from config import COZE_ACCESS_TOKEN
+from api import CozeAPIClient
+from text2vec import SentenceModel
 EMBEDDING_MODEL = "text-embedding-ada-002"
 CONTEXT_TOKEN_LIMIT = 4500
 TOKENS_PER_TOPIC = 2000
 TOPIC_NUM_MIN = 3
 TOPIC_NUM_MAX = 10
 logging = setup_logger('my_gpt_reader_gpt')
+
+# coze api
+bot_id = '7365285263922397235'  # 替换为实际的机器人 ID
+user_id = '123333333'  # 用户 ID
+
+
+# 创建 CozeAPIClient 实例
+client = CozeAPIClient(COZE_ACCESS_TOKEN)
+embedder = SentenceModel()
 
 
 def get_embedding(text: str, model: str = EMBEDDING_MODEL) -> list[float]:
@@ -28,11 +39,12 @@ def get_embedding(text: str, model: str = EMBEDDING_MODEL) -> list[float]:
     if os.path.isfile(tmpfile):
         with open(tmpfile, 'r', encoding='UTF-8') as f:
             return json.load(f)
-    result = openai.Embedding.create(
-        model=model,
-        input=text
-    )
-
+    # result = openai.Embedding.create(
+    #     model=model,
+    #     input=text
+    # )
+    result = get_single_embedding(text=text)
+    logging.info(f"get_embedding result =》{result}")
     with open(tmpfile, 'w', encoding='utf-8') as handle2:
         json.dump(result["data"][0]["embedding"],
                   handle2, ensure_ascii=False, indent=4)
@@ -40,30 +52,9 @@ def get_embedding(text: str, model: str = EMBEDDING_MODEL) -> list[float]:
     return result["data"][0]["embedding"]
 
 
-def get_embeddings(texts: List[str], model: str = EMBEDDING_MODEL, num_workers: int = 4) -> List[List[float]]:
-    # Process the texts in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-        future_to_embeddings = {executor.submit(
-            get_single_embedding, text, model): text for text in texts}
-        embeddings = []
-        max_length = 0
-        for future in concurrent.futures.as_completed(future_to_embeddings):
-            embedding = np.array(future.result())
-            # Find the maximum length of the embeddings
-            max_length = max(max_length, len(embedding))
-            embeddings.append(embedding)
-    # Ensure all embeddings have the same length
-    embeddings = [np.concatenate([e, np.zeros(
-        max_length - len(e))]) if len(e) != max_length else e for e in embeddings]
-    return embeddings
-
-
-def get_single_embedding(text: str, model: str = EMBEDDING_MODEL) -> List[float]:
-    result = openai.Embedding.create(
-        model=model,
-        input=text
-    )
-    return result.data[0]["embedding"]
+def get_single_embedding(text: str) -> List[float]:
+    embedding = embedder.encode(text)
+    return embedding
 
 
 def summarize_source(sources, embeddings):
@@ -95,21 +86,29 @@ def summarize_source(sources, embeddings):
                         f'len(ctx) + len(x)> CONTEXT_TOKEN_LIMIT -> {len(ctx) + len(x)} -> ctx is {ctx}')
                     continue
                 ctx += u"\n"+x
-            prompt = u"give a detail summarize based on the context\n\nContext:" + \
-                ctx+u"\n\nAnswer with the language Chinese, the summarize is:"
-            completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo-16k", messages=[{"role": "user", "content": prompt}])
-            logging.info(
-                f"summarize_source single ->>>> {prompt}, result ->>>> {completion.choices[0].message.content}")
-            cluster_summaries.append(completion.choices[0].message.content)
+            # prompt = u"give a detail summarize based on the context\n\nContext:" + \
+            #     ctx+u"\n\nAnswer with the language Chinese, the summarize is:"
+            # completion = client(
+            #     model="gpt-3.5-turbo-16k", messages=[{"role": "user", "content": prompt}])
+            response = client.send_message("123", bot_id, user_id, ctx)
+            # 现在，我们需要确保解析 JSON，并且可以访问 'messages' 键
+            if response.status_code == 200:
+                response_data = response.json()
+                if 'messages' in response_data:  # 假设 'messages' 是 JSON 响应中的一个键
+                    logging.info(
+                        f"summarize_source result ->>>> {response_data['messages'][0]['content']}")
+                    cluster_summaries.append(
+                        response_data['messages'][0]['content'])  # 获取内容
+                else:
+                    logging.error("JSON response does not contain 'messages'")
+            else:
+                # 如果状态码不是200，则记录错误状态码和响应文本
+                logging.error(
+                    f"Failed to send message: {response.status_code} -> {response.text}")
+            # cluster_summaries.append(completion.choices[0].message.content)
 
         # Step 2: Generate a final summary based on the cluster summaries
         combined_context = u" <br> ".join(cluster_summaries)
-        # new_prompt = u"delete the head and tail messages about the website, give a detailed summarize based on the context\n\nContext:" + \
-        #     combined_context+u"\n\nAnswer with the language Chinese, the answer is:"
-        # new_completion = openai.ChatCompletion.create(
-        #     model="gpt-3.5-turbo", messages=[{"role": "user", "content": new_prompt}])
-        # logging.info(f"new_completion -> {new_completion}")
         return combined_context
     except Exception as e:
         logging.error(f"summarize_source error -> {e}")
@@ -149,7 +148,9 @@ def file2embedding(folder, contents=None, batch_size=10, num_workers=4):
         logging.info(f"platform.system() -> {platform.system()}")
         # if platform.system() != 'Linux':
         summarizes = summarize_source(sources, embeddings)
-        embeddings_list = [list(embedding) for embedding in embeddings]
+        # embeddings_list = [list(embedding) for embedding in embeddings]
+        embeddings_list = [embedding.astype(
+            float).tolist() for embedding in embeddings]
         with open(folder, 'w', encoding='utf-8') as handle2:
             json.dump({"sources": sources, "embeddings": embeddings_list,
                       "summarizes": summarizes}, handle2, ensure_ascii=False, indent=4)
@@ -184,10 +185,12 @@ def order_document_sections_by_query_similarity(query: str, embeddings) -> list[
 
     Return the list of document sections, sorted by relevance in descending order.
     """
-    query_embedding = get_embedding(query)
+    query_embedding = get_single_embedding(query)
     document_similarities = sorted([
         (vector_similarity(query_embedding, doc_embedding), doc_index) for doc_index, doc_embedding in enumerate(embeddings)
     ], reverse=True, key=lambda x: x[0])
+    logging.info(
+        f"document_similarities =>>>>> {document_similarities}")
     return document_similarities
 
 
@@ -211,6 +214,20 @@ def ask(question: str, embeddings, sources):
         u"Question:" + question + u"\n\n"
         u"Answer:"
     ])
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-16k", messages=[{"role": "user", "content": prompt}])
-    return completion.choices[0].message.content
+    # completion = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo-16k", messages=[{"role": "user", "content": prompt}])
+    # return completion.choices[0].message.content
+    response = client.send_message("123", bot_id, user_id, prompt)
+    # 现在，我们需要确保解析 JSON，并且可以访问 'messages' 键
+    if response.status_code == 200:
+        response_data = response.json()
+        if 'messages' in response_data:  # 假设 'messages' 是 JSON 响应中的一个键
+            logging.info(
+                f"summarize_source result ->>>> {response_data['messages'][0]['content']}")
+            return response_data['messages'][0]['content']
+        else:
+            logging.error("JSON response does not contain 'messages'")
+    else:
+        # 如果状态码不是200，则记录错误状态码和响应文本
+        logging.error(
+            f"Failed to send message: {response.status_code} -> {response.text}")

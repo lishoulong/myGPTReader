@@ -120,8 +120,9 @@ def get_answer_from_file_embedding(messages, file, is_first_message=False):
 def get_answer_from_web_embedding(messages, urls, is_first_message=False, content=None):
     logging.info('=====> Use llama web with chatGPT to answer!')
     combained_urls = get_urls(urls)
-    logging.info(f"combained_urls -> {combained_urls}")
+    # logging.info(f"combained_urls -> {combained_urls}")
     json_path = get_json_path(''.join(sorted(urls)))
+    logging.info(f"combained_urls -> {json_path}")
 
     file_dict = {}
     documents = content

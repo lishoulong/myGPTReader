@@ -13,8 +13,11 @@ load_dotenv(find_dotenv())
 # print(f'VERIFICATION_TOKENVERIFICATION_TOKEN----{VERIFICATION_TOKEN}')
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 print(f'ENVIRONMENT =>> {ENVIRONMENT}')
+
+
 def get_env_value(key: str) -> str:
     return os.getenv(f"{key}_{ENVIRONMENT.upper()}")
+
 
 APP_ID = get_env_value("APP_ID")
 APP_SECRET = get_env_value("APP_SECRET")
@@ -28,3 +31,4 @@ OPENAI_API_KEY_THIRD = os.getenv('OPENAI_API_KEY_THIRD')
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 USE_MAC_OS_TTS = os.getenv('USE_MAC_OS_TTS')
 ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
+COZE_ACCESS_TOKEN = os.getenv('COZE_KEY')

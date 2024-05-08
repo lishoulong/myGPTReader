@@ -1,5 +1,3 @@
-import os
-
 import importlib.util
 import os
 
@@ -14,5 +12,3 @@ if spec is not None:
     print(f"The package '{package_name}' is located at: {package_path}")
 else:
     print(f"The package '{package_name}' is not installed.")
-
-
